@@ -1,3 +1,4 @@
+import json
 import pandas as pd
 from pathlib import Path
 from sklearn.model_selection import train_test_split, RandomizedSearchCV
@@ -10,14 +11,15 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.impute import SimpleImputer
 from sklearn.ensemble import RandomForestClassifier
 import joblib
-from .plots import plot_roc_curve
+from src.models.plots import plot_roc_curve
 import mlflow
 import mlflow.sklearn
 import matplotlib.pyplot as plt
 from sklearn import __version__ as _sklearn_version
 
 FEATURES_PATH = Path("data/processed/credit_data_features.csv")
-MODEL_PATH = Path("models/random_forest_pd.pkl")
+MODEL_PATH = Path("models/best_model.joblib")
+METRICS_PATH = Path("models/model_metrics.json")
 
 
 def load_data():
@@ -72,9 +74,8 @@ def build_preprocessor(X):
     return preprocessor
 
 
+def train_model(n_iter: int = 20, cv: int = 5):
 
-def train_model():
-    
     X, y = load_data()
 
     X_train, X_test, y_train, y_test = train_test_split(
@@ -102,13 +103,13 @@ def train_model():
     }
 
     with mlflow.start_run():
-        
+
         search = RandomizedSearchCV(
             pipe,
             param_distributions=param_grid,
-            n_iter=20,
+            n_iter=n_iter,
             scoring="roc_auc",
-            cv=5,
+            cv=cv,
             verbose=2,
             n_jobs=-1,
             random_state=42
@@ -141,6 +142,12 @@ def train_model():
 
         mlflow.log_metrics(metrics)
 
+        METRICS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        metrics_json = {k: float(v) for k, v in metrics.items()}
+        with open(METRICS_PATH, "w", encoding="utf-8") as f:
+            json.dump(metrics_json, f, ensure_ascii=False, indent=2)
+        mlflow.log_artifact(str(METRICS_PATH))
+
         RocCurveDisplay.from_predictions(y_test, y_prob)
         plt.title("ROC curve")
         plt.savefig("roc_curve.png")
@@ -149,7 +156,7 @@ def train_model():
         mlflow.log_artifact("roc_curve.png")
         mlflow.sklearn.log_model(
             sk_model=best_model,
-            artifact_path="model"
+            name="model"
         )
 
         MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -157,9 +164,9 @@ def train_model():
 
         print(f"Модель сохранена: {MODEL_PATH}")
 
-        return best_model, X_test, y_test, y_prob
+        return best_model, X_test, y_test, y_prob, metrics
 
 
 if __name__ == "__main__":
-    best_model, X_test, y_test, y_prob = train_model()
+    best_model, X_test, y_test, y_prob, metrics = train_model()
     plot_roc_curve(y_test, y_prob)
