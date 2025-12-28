@@ -1,15 +1,26 @@
 stages:
-  features:
-    cmd: python src/features/build_features.py
-    deps:
-    - data/processed/credit_data_processed.csv
-    - src/features/build_features.py
-    outs:
-    - data/processed/credit_data_features.csv
+
   prepare:
     cmd: python src/data/make_dataset.py
     deps:
-    - data/raw/UCI_Credit_Card.csv
-    - src/data/make_dataset.py
+      - src/data/make_dataset.py
+      - data/raw/UCI_Credit_Card.csv
     outs:
-    - data/processed/credit_data_processed.csv
+      - data/processed/credit_data_processed.csv
+
+  features:
+    cmd: python src/features/build_features.py
+    deps:
+      - src/features/build_features.py
+      - data/processed/credit_data_processed.csv
+    outs:
+      - data/processed/credit_data_features.csv
+
+  train:
+    cmd: python src/models/train_model.py
+    deps:
+      - src/models/train_model.py
+      - data/processed/credit_data_features.csv
+    outs:
+      - models/best_model.joblib
+      - models/model_metrics.json
