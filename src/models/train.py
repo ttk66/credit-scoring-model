@@ -9,12 +9,12 @@ from sklearn.metrics import (
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.impute import SimpleImputer
 from sklearn.ensemble import RandomForestClassifier
-import numpy as np
 import joblib
-from src.models.plots import plot_roc_curve
+from .plots import plot_roc_curve
 import mlflow
 import mlflow.sklearn
 import matplotlib.pyplot as plt
+from sklearn import __version__ as _sklearn_version
 
 FEATURES_PATH = Path("data/processed/credit_data_features.csv")
 MODEL_PATH = Path("models/random_forest_pd.pkl")
@@ -22,38 +22,59 @@ MODEL_PATH = Path("models/random_forest_pd.pkl")
 
 def load_data():
     df = pd.read_csv(FEATURES_PATH)
-    y = df["default_payment_next_month"]
-    X = df.drop(columns=["default_payment_next_month"])
+    df = df.drop(columns=["id"], errors="ignore")
+    target = "default_payment_next_month"
+    if target not in df.columns:
+        raise KeyError(f"Target column '{target}' not found in {FEATURES_PATH}")
+
+    categorical_candidates = ["sex", "education", "marriage", "age_bin"]
+    present_cat = [c for c in categorical_candidates if c in df.columns]
+    for c in present_cat:
+        df[c] = df[c].astype("category")
+
+    y = df[target]
+    X = df.drop(columns=[target])
     return X, y
 
 
 def build_preprocessor(X):
-    numeric_features = X.select_dtypes(include=["int64", "float64"]).columns.tolist()
-    categorical_features = X.select_dtypes(include=["object", "category"]).columns.tolist()
+    explicit_cat = [c for c in ["sex", "education", "marriage", "age_bin"] if c in X.columns]
+    if explicit_cat:
+        categorical_features = explicit_cat
+    else:
+        categorical_features = X.select_dtypes(include=["object", "category"]).columns.tolist()
+
+    numeric_features = [c for c in X.columns if c not in categorical_features]
 
     numeric_pipeline = Pipeline(steps=[
         ("imputer", SimpleImputer(strategy="median")),
         ("scaler", StandardScaler())
     ])
+    sk_major, sk_minor = map(int, _sklearn_version.split(".")[:2])
+    if (sk_major, sk_minor) >= (1, 2):
+        ohe = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
+    else:
+        ohe = OneHotEncoder(handle_unknown="ignore", sparse=False)
 
     categorical_pipeline = Pipeline(steps=[
         ("imputer", SimpleImputer(strategy="most_frequent")),
-        ("ohe", OneHotEncoder(handle_unknown="ignore"))
+        ("ohe", ohe)
     ])
 
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ("num", numeric_pipeline, numeric_features),
-            ("cat", categorical_pipeline, categorical_features)
-        ]
-    )
+    transformers = []
+    if numeric_features:
+        transformers.append(("num", numeric_pipeline, numeric_features))
+    if categorical_features:
+        transformers.append(("cat", categorical_pipeline, categorical_features))
+
+    preprocessor = ColumnTransformer(transformers=transformers, remainder="drop")
 
     return preprocessor
 
 
 
 def train_model():
-
+    
     X, y = load_data()
 
     X_train, X_test, y_train, y_test = train_test_split(
@@ -106,9 +127,9 @@ def train_model():
 
         metrics = {
             "ROC-AUC": roc_auc_score(y_test, y_prob),
-            "Precision": precision_score(y_test, y_pred),
-            "Recall": recall_score(y_test, y_pred),
-            "F1": f1_score(y_test, y_pred)
+            "Precision": precision_score(y_test, y_pred, zero_division=0),
+            "Recall": recall_score(y_test, y_pred, zero_division=0),
+            "F1": f1_score(y_test, y_pred, zero_division=0)
         }
 
         print("Classification report:")
@@ -117,14 +138,14 @@ def train_model():
         print("Metrics on test set:")
         for k, v in metrics.items():
             print(f"{k}: {v:.4f}")
-            
+
         mlflow.log_metrics(metrics)
-        
+
         RocCurveDisplay.from_predictions(y_test, y_prob)
         plt.title("ROC curve")
         plt.savefig("roc_curve.png")
         plt.close()
-        
+
         mlflow.log_artifact("roc_curve.png")
         mlflow.sklearn.log_model(
             sk_model=best_model,
@@ -137,6 +158,7 @@ def train_model():
         print(f"Модель сохранена: {MODEL_PATH}")
 
         return best_model, X_test, y_test, y_prob
+
 
 if __name__ == "__main__":
     best_model, X_test, y_test, y_prob = train_model()
