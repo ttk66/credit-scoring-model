@@ -1,0 +1,43 @@
+{
+  "expectations": [
+
+    { "expectation_type": "expect_table_row_count_to_be_greater_than",
+      "kwargs": { "value": 1000 }},
+
+    { "expectation_type": "expect_table_columns_to_contain_set",
+      "kwargs": {
+        "column_set": [
+          "limit_bal", "age",
+          "avg_bill_amt", "avg_pay_amt",
+          "bill_pay_ratio",
+          "num_late_payments", "max_delay", "avg_delay",
+          "bill_trend", "age_bin"
+        ]
+      }
+    },
+
+    { "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": { "column": "limit_bal", "min_value": 0 }
+    },
+
+    { "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": { "column": "age", "min_value": 18, "max_value": 100 }
+    },
+
+    { "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": { "column": "num_late_payments", "min_value": 0, "max_value": 12 }
+    },
+
+    { "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": { "column": "bill_pay_ratio", "min_value": 0, "max_value": 5 }
+    },
+
+    { "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": { "column": "bill_trend" }
+    },
+
+    { "expectation_type": "expect_column_values_to_be_in_set",
+      "kwargs": {"column": "default_payment_next_month", "value_set": [0, 1]}
+    }
+  ]
+}
