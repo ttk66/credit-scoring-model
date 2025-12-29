@@ -2,4 +2,4 @@
 /mlflow.db
 /data/processed/
 *.png
-mlruns/o
+mlruns/0
