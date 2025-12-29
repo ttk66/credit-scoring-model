@@ -1,0 +1,22 @@
+artifact_path: file:D:/credit-scoring-model/mlruns/0/models/m-e59a15d19b9a4cab97be4f2bf6c30a1a/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.13.9
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.8.0
+mlflow_version: 3.8.1
+model_id: m-e59a15d19b9a4cab97be4f2bf6c30a1a
+model_size_bytes: 574
+model_uuid: m-e59a15d19b9a4cab97be4f2bf6c30a1a
+prompts: null
+run_id: 145d8f39fa1047f29b67fe78bbb15857
+utc_time_created: '2025-12-29 12:53:11.237416'
