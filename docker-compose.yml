@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    container_name: credit-scoring-api
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app/src
+      - MODEL_PATH=/app/models/best_model.joblib
+    volumes:
+      - ./models:/app/models:ro
+      - ./data:/app/data:ro
+    restart: unless-stopped
