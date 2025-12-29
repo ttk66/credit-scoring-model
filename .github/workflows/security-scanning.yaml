@@ -1,0 +1,102 @@
+name: Security Scanning
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Every Sunday at midnight
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  docker-scan:
+    name: Docker Image Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'ghcr.io/${{ github.repository }}/api:latest'
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+          ignore-unfixed: true
+          
+      - name: Run Docker Scout
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: ghcr.io/${{ github.repository }}/api:latest
+          
+      - name: Check for malware
+        uses: anchore/scan-action@v3
+        with:
+          path: ./docker/
+          fail-build: true
+          severity-cutoff: high
+
+  code-scan:
+    name: Source Code Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Run Semgrep SAST
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: p/python
+          outputFormat: sarif
+          severity: ERROR
+          
+      - name: Run Gitleaks for secrets detection
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Run OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'credit-scoring-ml'
+          path: '.'
+          format: 'HTML'
+          args: >
+            --scan .
+            --out reports/
+            --enableExperimental
+            --failOnCVSS 7
+          
+      - name: Upload security reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-scans
+          path: |
+            semgrep.sarif
+            gitleaks-report.json
+            reports/dependency-check-report.html
+
+  compliance:
+    name: Compliance Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check CIS benchmarks
+        run: |
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            docker/docker-bench-security
+          
+      - name: Check Kubernetes manifests
+        uses: stackrox/kube-linter-action@v1
+        with:
+          path: ./kubernetes/
+          format: sarif
+          
+      - name: Generate compliance report
+        run: |
+          python scripts/compliance_check.py \
+            --standards gdpr iso27001 pci-dss \
+            --output compliance-report.md

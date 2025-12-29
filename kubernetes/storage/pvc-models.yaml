@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: models-pvc
+  namespace: ml-serving
+  labels:
+    app: credit-scoring
+    storage: models
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: yc-network-hdd
+  resources:
+    requests:
+      storage: 10Gi
+  selector:
+    matchLabels:
+      type: models-storage
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: models-pv
+  labels:
+    type: models-storage
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: yc-network-hdd
+  csi:
+    driver: disk.csi.yandex.net
+    volumeHandle: epd1l7p2j0kmk2iq5v4k # Идентификатор диска в Yandex Cloud
+    fsType: ext4
