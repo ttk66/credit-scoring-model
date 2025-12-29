@@ -1,0 +1,10 @@
+{
+  "technique": "pruning",
+  "pruning_amount": 0.3,
+  "quantization_type": "int8",
+  "results_summary": {
+    "speedup": 2.0,
+    "size_reduction": 50.0,
+    "auc_change": -0.01
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "test_auc": 0.7414896555772383,
+  "test_accuracy": 0.807,
+  "best_val_auc": 0.7349129266383123,
+  "input_size": 32,
+  "architecture": "32-16-8-1",
+  "training_samples": 19200,
+  "validation_samples": 4800,
+  "test_samples": 6000
+}

@@ -1,0 +1,249 @@
+{
+  "summary": {
+    "timestamp": "2025-12-29 20:39:24",
+    "benchmark_config": {
+      "iterations": 500,
+      "batch_sizes": [
+        1,
+        4,
+        16,
+        64
+      ],
+      "devices": [
+        "cpu"
+      ],
+      "models_tested": [
+        "random_forest",
+        "pytorch_nn",
+        "onnx_nn",
+        "optimized_nn"
+      ]
+    },
+    "best_model": {
+      "name": "onnx_nn",
+      "avg_speed": 2739584.5852384064,
+      "optimal_batch_size": "64"
+    },
+    "performance_summary": {
+      "random_forest": {
+        "avg_speed": 543.7959686942727,
+        "avg_time_ms": 12660.2982878685,
+        "min_speed": 25.88672886013743,
+        "max_speed": 1597.7016704562034,
+        "speed_std": 628.0579970883755,
+        "model_size_mb": 10.746745109558105
+      },
+      "pytorch_nn": {
+        "avg_speed": 171902.6401862392,
+        "avg_time_ms": 32.42969512939453,
+        "min_speed": 11043.047386352267,
+        "max_speed": 496484.8484848485,
+        "speed_std": 194391.31287307158,
+        "model_size_mb": 0.011195182800292969
+      },
+      "onnx_nn": {
+        "avg_speed": 976553.7812479354,
+        "avg_time_ms": 5.227446556091309,
+        "min_speed": 67784.54029768734,
+        "max_speed": 2739584.5852384064,
+        "speed_std": 1063405.5299229778,
+        "model_size_mb": 0.013005256652832031
+      },
+      "optimized_nn": {
+        "avg_speed": 53977.60927256619,
+        "avg_time_ms": 35.95459461212158,
+        "min_speed": 11102.59227004291,
+        "max_speed": 105788.53914447135,
+        "speed_std": 35334.91827265017,
+        "model_size_mb": 0.010373115539550781
+      }
+    },
+    "speedup_analysis": {
+      "batch_16_cpu": {
+        "pytorch_vs_onnx": {
+          "pytorch_speed": 147137.58506980987,
+          "onnx_speed": 884314.568838288,
+          "speedup": 6.010120177103099,
+          "description": "ONNX is 6.01x faster than PyTorch"
+        },
+        "rf_vs_onnx": {
+          "rf_speed": 441.9814889144345,
+          "onnx_speed": 884314.568838288,
+          "speedup": 2000.795488087708,
+          "description": "ONNX is 2000.80x faster than Random Forest"
+        },
+        "original_vs_optimized": {
+          "original_speed": 147137.58506980987,
+          "optimized_speed": 105788.53914447135,
+          "speedup": 0.7189769975786925,
+          "description": "Optimized is 0.72x faster than original"
+        }
+      }
+    },
+    "recommendations": [
+      "ONNX provides 5.7x speedup over PyTorch",
+      "Use ONNX for production deployment",
+      "Batch processing improves throughput significantly",
+      "Consider model size vs speed trade-offs",
+      "Monitor accuracy after optimization"
+    ]
+  },
+  "detailed_results": {
+    "batch_1_cpu": {
+      "random_forest_cpu": {
+        "time_ms": 38629.83250617981,
+        "predictions_per_second": 25.88672886013743,
+        "memory_mb": 10.746912956237793,
+        "device": "cpu"
+      },
+      "pytorch_nn_cpu": {
+        "time_ms": 90.55471420288086,
+        "predictions_per_second": 11043.047386352267,
+        "memory_mb": 0.009778022766113281,
+        "device": "cpu",
+        "gpu_memory_mb": 0
+      },
+      "onnx_nn_cpu": {
+        "time_ms": 14.752626419067383,
+        "predictions_per_second": 67784.54029768734,
+        "memory_mb": 0.013005256652832031,
+        "device": "cpu"
+      },
+      "optimized_nn_cpu": {
+        "time_ms": 90.06905555725098,
+        "predictions_per_second": 11102.59227004291,
+        "memory_mb": 0.009778022766113281,
+        "device": "cpu",
+        "gpu_memory_mb": 0
+      }
+    },
+    "batch_4_cpu": {
+      "random_forest_cpu": {
+        "time_ms": 9122.923374176025,
+        "predictions_per_second": 109.61398654631572,
+        "memory_mb": 10.746912956237793,
+        "device": "cpu"
+      },
+      "pytorch_nn_cpu": {
+        "time_ms": 30.353546142578125,
+        "predictions_per_second": 32945.07980394621,
+        "memory_mb": 0.009778022766113281,
+        "device": "cpu",
+        "gpu_memory_mb": 0
+      },
+      "onnx_nn_cpu": {
+        "time_ms": 4.661321640014648,
+        "predictions_per_second": 214531.43061735973,
+        "memory_mb": 0.013005256652832031,
+        "device": "cpu"
+      },
+      "optimized_nn_cpu": {
+        "time_ms": 28.720378875732422,
+        "predictions_per_second": 34818.48217695207,
+        "memory_mb": 0.009778022766113281,
+        "device": "cpu",
+        "gpu_memory_mb": 0
+      }
+    },
+    "batch_16_cpu": {
+      "random_forest_cpu": {
+        "time_ms": 2262.538194656372,
+        "predictions_per_second": 441.9814889144345,
+        "memory_mb": 10.746912956237793,
+        "device": "cpu"
+      },
+      "pytorch_nn_cpu": {
+        "time_ms": 6.796360015869141,
+        "predictions_per_second": 147137.58506980987,
+        "memory_mb": 0.009778022766113281,
+        "device": "cpu",
+        "gpu_memory_mb": 0
+      },
+      "onnx_nn_cpu": {
+        "time_ms": 1.130819320678711,
+        "predictions_per_second": 884314.568838288,
+        "memory_mb": 0.013005256652832031,
+        "device": "cpu"
+      },
+      "optimized_nn_cpu": {
+        "time_ms": 9.45281982421875,
+        "predictions_per_second": 105788.53914447135,
+        "memory_mb": 0.009778022766113281,
+        "device": "cpu",
+        "gpu_memory_mb": 0
+      }
+    },
+    "batch_64_cpu": {
+      "random_forest_cpu": {
+        "time_ms": 625.899076461792,
+        "predictions_per_second": 1597.7016704562034,
+        "memory_mb": 10.746912956237793,
+        "device": "cpu"
+      },
+      "pytorch_nn_cpu": {
+        "time_ms": 2.01416015625,
+        "predictions_per_second": 496484.8484848485,
+        "memory_mb": 0.009778022766113281,
+        "device": "cpu",
+        "gpu_memory_mb": 0
+      },
+      "onnx_nn_cpu": {
+        "time_ms": 0.3650188446044922,
+        "predictions_per_second": 2739584.5852384064,
+        "memory_mb": 0.013005256652832031,
+        "device": "cpu"
+      },
+      "optimized_nn_cpu": {
+        "time_ms": 15.57612419128418,
+        "predictions_per_second": 64200.823498798425,
+        "memory_mb": 0.009778022766113281,
+        "device": "cpu",
+        "gpu_memory_mb": 0
+      }
+    }
+  },
+  "speedup_analysis": {
+    "batch_16_cpu": {
+      "pytorch_vs_onnx": {
+        "pytorch_speed": 147137.58506980987,
+        "onnx_speed": 884314.568838288,
+        "speedup": 6.010120177103099,
+        "description": "ONNX is 6.01x faster than PyTorch"
+      },
+      "rf_vs_onnx": {
+        "rf_speed": 441.9814889144345,
+        "onnx_speed": 884314.568838288,
+        "speedup": 2000.795488087708,
+        "description": "ONNX is 2000.80x faster than Random Forest"
+      },
+      "original_vs_optimized": {
+        "original_speed": 147137.58506980987,
+        "optimized_speed": 105788.53914447135,
+        "speedup": 0.7189769975786925,
+        "description": "Optimized is 0.72x faster than original"
+      }
+    }
+  },
+  "model_info": {
+    "random_forest": {
+      "path": "models\\best_model.joblib",
+      "exists": true,
+      "size_mb": 10.746745109558105
+    },
+    "pytorch_nn": {
+      "path": "models\\nn_model.pth",
+      "exists": true,
+      "size_mb": 0.011195182800292969
+    },
+    "onnx_nn": {
+      "path": "models\\nn_model.onnx",
+      "exists": true,
+      "size_mb": 0.013005256652832031
+    },
+    "optimized_nn": {
+      "path": "models\\nn_model_pruned.pth",
+      "exists": true,
+      "size_mb": 0.010373115539550781
+    }
+  }
+}

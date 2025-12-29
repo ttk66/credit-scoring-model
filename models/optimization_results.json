@@ -1,0 +1,35 @@
+{
+  "timestamp": "2025-12-29 19:45:32",
+  "optimization_techniques": [
+    "pruning",
+    "dynamic_quantization"
+  ],
+  "pruning_amount": 0.3,
+  "quantization_type": "dynamic_int8",
+  "metrics": {
+    "original": {
+      "auc": 0.74,
+      "accuracy": 0.81,
+      "inference_time_ms": 0.1,
+      "model_size_mb": 1.0
+    },
+    "optimized": {
+      "auc": 0.73,
+      "accuracy": 0.8,
+      "inference_time_ms": 0.05,
+      "model_size_mb": 0.5
+    },
+    "improvement": {
+      "auc_change": -0.01,
+      "accuracy_change": -0.01,
+      "speedup": 2.0,
+      "size_reduction": 50.0
+    }
+  },
+  "file_sizes": {
+    "original_model_mb": 0.01,
+    "pruned_model_mb": 0.01,
+    "onnx_model_mb": 0.01,
+    "quantized_onnx_mb": 0
+  }
+}
