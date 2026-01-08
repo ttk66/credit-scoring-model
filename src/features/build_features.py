@@ -12,10 +12,8 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     df = df[df["limit_bal"] > 0].reset_index(drop=True)
     df["limit_age_ratio"] = df["limit_bal"] / (df["age"] + 1)
 
-    bill_cols = [f"bill_amt{i}" for i in range(
-        1, 7) if f"bill_amt{i}" in df.columns]
-    pay_cols = [f"pay_amt{i}" for i in range(
-        1, 7) if f"pay_amt{i}" in df.columns]
+    bill_cols = [f"bill_amt{i}" for i in range(1, 7) if f"bill_amt{i}" in df.columns]
+    pay_cols = [f"pay_amt{i}" for i in range(1, 7) if f"pay_amt{i}" in df.columns]
 
     df["avg_bill_amt"] = df[bill_cols].mean(axis=1)
     df["avg_pay_amt"] = df[pay_cols].mean(axis=1)
@@ -42,13 +40,10 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
         f"bill_pay_ratio stats: negatives={n_neg}, >5_before_clip={n_over}, nulls={n_null}, >5_after_clip={n_over_after}"
     )
 
-    pay_status_cols = [
-        f"pay_{i}" for i in range(
-            0, 7) if f"pay_{i}" in df.columns]
+    pay_status_cols = [f"pay_{i}" for i in range(0, 7) if f"pay_{i}" in df.columns]
     df["num_late_payments"] = (df[pay_status_cols] > 0).sum(axis=1).astype(int)
     df["max_delay"] = df[pay_status_cols].max(axis=1)
-    df["avg_delay"] = df[pay_status_cols].where(
-        df[pay_status_cols] > 0).mean(axis=1)
+    df["avg_delay"] = df[pay_status_cols].where(df[pay_status_cols] > 0).mean(axis=1)
 
     def _slope(row: Any) -> float:
         y = row.values.astype(float)

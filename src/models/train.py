@@ -32,8 +32,7 @@ def load_data():
     df = df.drop(columns=["id"], errors="ignore")
     target = "default_payment_next_month"
     if target not in df.columns:
-        raise KeyError(
-            f"Target column '{target}' not found in {FEATURES_PATH}")
+        raise KeyError(f"Target column '{target}' not found in {FEATURES_PATH}")
 
     categorical_candidates = ["sex", "education", "marriage", "age_bin"]
     present_cat = [c for c in categorical_candidates if c in df.columns]
@@ -78,11 +77,9 @@ def build_preprocessor(X):
     if numeric_features:
         transformers.append(("num", numeric_pipeline, numeric_features))
     if categorical_features:
-        transformers.append(
-            ("cat", categorical_pipeline, categorical_features))
+        transformers.append(("cat", categorical_pipeline, categorical_features))
 
-    preprocessor = ColumnTransformer(
-        transformers=transformers, remainder="drop")
+    preprocessor = ColumnTransformer(transformers=transformers, remainder="drop")
 
     return preprocessor
 
@@ -97,10 +94,7 @@ def train_model(n_iter: int = 20, cv: int = 5):
 
     preprocessor = build_preprocessor(X)
 
-    model = RandomForestClassifier(
-        random_state=42,
-        n_jobs=-1,
-        class_weight="balanced")
+    model = RandomForestClassifier(random_state=42, n_jobs=-1, class_weight="balanced")
 
     pipe = Pipeline(steps=[("preprocess", preprocessor), ("model", model)])
 

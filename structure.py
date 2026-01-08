@@ -4,13 +4,7 @@ from pathlib import Path
 
 def print_tree(start_path, ignore_dirs=None, ignore_files=None, max_depth=5):
     if ignore_dirs is None:
-        ignore_dirs = {
-            ".git",
-            "__pycache__",
-            ".pytest_cache",
-            ".venv",
-            "venv",
-            "env"}
+        ignore_dirs = {".git", "__pycache__", ".pytest_cache", ".venv", "venv", "env"}
     if ignore_files is None:
         ignore_files = {".pyc", ".pyo", ".pyd", ".DS_Store", ".coverage"}
 

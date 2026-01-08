@@ -89,8 +89,7 @@ def main():
 
         # Сравнение режимов квантования
         quantizer = ONNXQuantizer(Path(args.onnx_model))
-        results = quantizer.compare_quantization_modes(
-            X_scaled, n_iterations=100)
+        results = quantizer.compare_quantization_modes(X_scaled, n_iterations=100)
 
         print("\nQuantization Comparison Results:")
         print("-" * 40)

@@ -44,8 +44,7 @@ def test_train_model_writes_model_and_metrics(tmp_path, monkeypatch):
     # Перенаправляем пути сохранения в tmp
     monkeypatch.setattr(train, "MODEL_PATH", tmp_path / "model.joblib")
     monkeypatch.setattr(train, "METRICS_PATH", tmp_path / "metrics.json")
-    best_model, X_test, y_test, y_prob, metrics = train.train_model(
-        n_iter=1, cv=2)
+    best_model, X_test, y_test, y_prob, metrics = train.train_model(n_iter=1, cv=2)
 
     # Проверки: файлы созданы и содержат ожидаемые ключи
     assert (tmp_path / "model.joblib").exists()

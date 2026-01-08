@@ -55,10 +55,8 @@ def _simple_validate(df: pd.DataFrame, suite: dict):
                         success = False
                     if max_v is not None and (ser > max_v).any():
                         success = False
-                    info["observed_min"] = float(
-                        ser.min()) if len(ser) > 0 else None
-                    info["observed_max"] = float(
-                        ser.max()) if len(ser) > 0 else None
+                    info["observed_min"] = float(ser.min()) if len(ser) > 0 else None
+                    info["observed_max"] = float(ser.max()) if len(ser) > 0 else None
 
             elif etype == "expect_column_values_to_not_be_null":
                 col = kw.get("column")
@@ -110,8 +108,7 @@ def validate_features(raise_on_fail: bool = True):
     df = pd.read_csv(FEATURES_PATH)
 
     if not EXPECTATIONS_PATH.exists():
-        raise FileNotFoundError(
-            f"Expectations file not found at {EXPECTATIONS_PATH}")
+        raise FileNotFoundError(f"Expectations file not found at {EXPECTATIONS_PATH}")
 
     with open(EXPECTATIONS_PATH, "r", encoding="utf-8") as f:
         suite = json.load(f)

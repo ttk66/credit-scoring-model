@@ -45,8 +45,7 @@ def build_features_api(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
     mask = df["limit_bal"] > 0
-    df["limit_age_ratio"] = np.where(
-        mask, df["limit_bal"] / (df["age"] + 1), 0)
+    df["limit_age_ratio"] = np.where(mask, df["limit_bal"] / (df["age"] + 1), 0)
 
     bill_cols = [f"bill_amt{i}" for i in range(1, 7)]
     pay_cols = [f"pay_amt{i}" for i in range(1, 7)]
@@ -99,11 +98,7 @@ def build_features_api(df: pd.DataFrame) -> pd.DataFrame:
     bins = [0, 30, 40, 50, 60, 100]
     labels = [0, 1, 2, 3, 4]
 
-    df["age_bin"] = pd.cut(
-        df["age"],
-        bins=bins,
-        labels=labels,
-        include_lowest=True)
+    df["age_bin"] = pd.cut(df["age"], bins=bins, labels=labels, include_lowest=True)
     df["age_bin"] = df["age_bin"].cat.add_categories([-1]).fillna(-1)
 
     # Категориальные фичи
@@ -203,9 +198,7 @@ def get_model_info():
     return {
         "model_type": "Pipeline",
         "pipeline_steps": (
-            list(
-                model.named_steps.keys()) if hasattr(
-                model, "named_steps") else []
+            list(model.named_steps.keys()) if hasattr(model, "named_steps") else []
         ),
         "expected_features": (
             expected_features if "expected_features" in globals() else []
