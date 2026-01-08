@@ -62,8 +62,7 @@ class PerformanceComparator:
             try:
                 import joblib
 
-                self.models["random_forest"] = joblib.load(
-                    MODEL_PATHS["random_forest"])
+                self.models["random_forest"] = joblib.load(MODEL_PATHS["random_forest"])
                 print("Random Forest model loaded")
             except Exception as e:
                 print(f"Failed to load Random Forest: {e}")
@@ -73,8 +72,7 @@ class PerformanceComparator:
             try:
                 import numpy
 
-                torch.serialization.add_safe_globals(
-                    [numpy._core.multiarray.scalar])
+                torch.serialization.add_safe_globals([numpy._core.multiarray.scalar])
 
                 checkpoint = torch.load(
                     MODEL_PATHS["pytorch_nn"], map_location="cpu", weights_only=False
@@ -82,9 +80,7 @@ class PerformanceComparator:
 
                 from src.models.nn_model import CreditScoringNN
 
-                model = CreditScoringNN(
-                    input_size=checkpoint.get(
-                        "input_size", 32))
+                model = CreditScoringNN(input_size=checkpoint.get("input_size", 32))
                 model.load_state_dict(checkpoint["model_state_dict"])
                 model.eval()
 
@@ -110,8 +106,7 @@ class PerformanceComparator:
             try:
                 import numpy
 
-                torch.serialization.add_safe_globals(
-                    [numpy._core.multiarray.scalar])
+                torch.serialization.add_safe_globals([numpy._core.multiarray.scalar])
 
                 checkpoint = torch.load(
                     MODEL_PATHS["optimized_nn"], map_location="cpu", weights_only=False
@@ -119,9 +114,7 @@ class PerformanceComparator:
 
                 from src.models.nn_model import CreditScoringNN
 
-                model = CreditScoringNN(
-                    input_size=checkpoint.get(
-                        "input_size", 32))
+                model = CreditScoringNN(input_size=checkpoint.get("input_size", 32))
                 model.load_state_dict(checkpoint["model_state_dict"])
                 model.eval()
 
@@ -221,8 +214,7 @@ class PerformanceComparator:
             "age_bin",
         ]
 
-        df = pd.DataFrame(test_data,
-                          columns=feature_names[: test_data.shape[1]])
+        df = pd.DataFrame(test_data, columns=feature_names[: test_data.shape[1]])
 
         # Warmup
         for _ in range(10):
@@ -232,7 +224,7 @@ class PerformanceComparator:
         start_time = time.time()
 
         for i in range(0, len(df), batch_size):
-            batch = df.iloc[i: i + batch_size]
+            batch = df.iloc[i : i + batch_size]
             _ = model.predict_proba(batch)
 
         total_time = time.time() - start_time
@@ -306,7 +298,7 @@ class PerformanceComparator:
 
         with torch.no_grad():
             for i in range(0, len(test_tensor), batch_size):
-                batch = test_tensor[i: i + batch_size]
+                batch = test_tensor[i : i + batch_size]
                 _ = model_on_device(batch)
 
             # Синхронизация для GPU
@@ -321,8 +313,7 @@ class PerformanceComparator:
 
         # Измерение использования памяти GPU
         if device == "cuda":
-            results["gpu_memory_mb"] = torch.cuda.max_memory_allocated() / \
-                (1024 * 1024)
+            results["gpu_memory_mb"] = torch.cuda.max_memory_allocated() / (1024 * 1024)
             torch.cuda.reset_peak_memory_stats()
         else:
             results["gpu_memory_mb"] = 0
@@ -334,8 +325,7 @@ class PerformanceComparator:
 
         return results
 
-    def benchmark_onnx(self, session, test_data: np.ndarray,
-                       batch_size: int) -> Dict:
+    def benchmark_onnx(self, session, test_data: np.ndarray, batch_size: int) -> Dict:
         """Бенчмарк ONNX модели"""
         results = {"time_ms": 0, "predictions_per_second": 0, "memory_mb": 0}
 
@@ -349,7 +339,7 @@ class PerformanceComparator:
         start_time = time.time()
 
         for i in range(0, len(test_data), batch_size):
-            batch = test_data[i: i + batch_size]
+            batch = test_data[i : i + batch_size]
             session.run(None, {input_name: batch})
 
         total_time = time.time() - start_time
@@ -380,7 +370,9 @@ class PerformanceComparator:
         print("\nSystem resources before tests:")
         before_resources = self.measure_system_resources()
         print(f"  CPU: {before_resources['cpu_percent']:.1f}%")
-        print(f"  Memory: {before_resources['memory_used_mb']:.1f} MB / {before_resources['memory_total_mb']:.1f} MB")
+        print(
+            f"  Memory: {before_resources['memory_used_mb']:.1f} MB / {before_resources['memory_total_mb']:.1f} MB"
+        )
 
         # Подготовка данных
         test_data = self.prepare_test_data(n_samples=1000)
@@ -414,8 +406,7 @@ class PerformanceComparator:
                                 model, test_data, batch_size
                             )
                         elif "onnx" in model_name:
-                            results = self.benchmark_onnx(
-                                model, test_data, batch_size)
+                            results = self.benchmark_onnx(model, test_data, batch_size)
                         else:
                             # Для PyTorch моделей указываем устройство
                             results = self.benchmark_pytorch(
@@ -433,8 +424,7 @@ class PerformanceComparator:
                                     results['gpu_memory_mb']:.1f} MB)"
                             )
                         else:
-                            print(
-                                f"{results['predictions_per_second']:.1f} pred/s")
+                            print(f"{results['predictions_per_second']:.1f} pred/s")
 
                     except Exception as e:
                         print(f"Failed: {str(e)[:50]}")
@@ -628,15 +618,13 @@ class PerformanceComparator:
                             speedup = gpu_speed / cpu_speed
                             if batch_size not in speedup_by_batch:
                                 speedup_by_batch[batch_size] = []
-                            speedup_by_batch[batch_size].append(
-                                (model_name, speedup))
+                            speedup_by_batch[batch_size].append((model_name, speedup))
 
             if speedup_by_batch:
                 x = np.arange(len(speedup_by_batch))
                 batch_sizes_list = list(speedup_by_batch.keys())
 
-                for i, (batch_size, speedups) in enumerate(
-                        speedup_by_batch.items()):
+                for i, (batch_size, speedups) in enumerate(speedup_by_batch.items()):
                     for model_name, speedup in speedups:
                         color = "green" if speedup >= 1 else "red"
                         plt.bar(
@@ -660,10 +648,7 @@ class PerformanceComparator:
 
             # Сохраняем визуализацию CPU/GPU
             plt.tight_layout()
-            plt.savefig(
-                "models/cpu_gpu_comparison.png",
-                dpi=150,
-                bbox_inches="tight")
+            plt.savefig("models/cpu_gpu_comparison.png", dpi=150, bbox_inches="tight")
             plt.close()
 
             print("CPU/GPU comparison saved: models/cpu_gpu_comparison.png")
@@ -772,13 +757,11 @@ class PerformanceComparator:
                 speedup_values = []
 
                 for comp_name, comp_data in comparisons.items():
-                    comparison_names.append(
-                        comp_name.replace("_", " ").title())
+                    comparison_names.append(comp_name.replace("_", " ").title())
                     speedup_values.append(comp_data["speedup"])
 
                 if comparison_names:
-                    colors_comp = [
-                        "green" if x >= 1 else "red" for x in speedup_values]
+                    colors_comp = ["green" if x >= 1 else "red" for x in speedup_values]
                     bars4 = plt.bar(
                         comparison_names, speedup_values, color=colors_comp, alpha=0.6
                     )
@@ -881,11 +864,7 @@ class PerformanceComparator:
         performance_summary = {}
 
         # Список имен моделей без суффиксов
-        base_model_names = [
-            "random_forest",
-            "pytorch_nn",
-            "onnx_nn",
-            "optimized_nn"]
+        base_model_names = ["random_forest", "pytorch_nn", "onnx_nn", "optimized_nn"]
 
         for base_name in base_model_names:
             if base_name not in self.models:
@@ -1066,8 +1045,7 @@ class PerformanceComparator:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Compare performance of all models")
+    parser = argparse.ArgumentParser(description="Compare performance of all models")
     parser.add_argument(
         "--iterations", type=int, default=500, help="Number of iterations per benchmark"
     )

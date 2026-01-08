@@ -67,10 +67,8 @@ def prepare_data_for_nn(
         X_scaled = np.nan_to_num(X_scaled, nan=0.0)
 
     print(f"  Data shape: {X_scaled.shape}")
-    print(
-        f"  Scaled data - Min: {X_scaled.min():.4f}, Max: {X_scaled.max():.4f}")
-    print(
-        f"  Scaled data - Mean: {X_scaled.mean():.4f}, Std: {X_scaled.std():.4f}")
+    print(f"  Scaled data - Min: {X_scaled.min():.4f}, Max: {X_scaled.max():.4f}")
+    print(f"  Scaled data - Mean: {X_scaled.mean():.4f}, Std: {X_scaled.std():.4f}")
 
     return X_scaled, y.values, scaler
 
@@ -107,10 +105,7 @@ def train_nn_model(
         torch.FloatTensor(X_val), torch.FloatTensor(y_val).reshape(-1, 1)
     )
 
-    train_loader = DataLoader(
-        train_dataset,
-        batch_size=batch_size,
-        shuffle=True)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
     # Инициализация модели с инициализацией весов
@@ -123,10 +118,7 @@ def train_nn_model(
             nn.init.zeros_(layer.bias)
 
     criterion = nn.BCELoss()
-    optimizer = optim.AdamW(
-        model.parameters(),
-        lr=learning_rate,
-        weight_decay=1e-4)
+    optimizer = optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=1e-4)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
 
     # Обучение
@@ -189,7 +181,9 @@ def train_nn_model(
 
         # Проверка корректности
         if np.any(np.isnan(val_predictions_np)):
-            print(f"Epoch {epoch +1}: Warning - NaN in predictions, skipping AUC calculation")
+            print(
+                f"Epoch {epoch +1}: Warning - NaN in predictions, skipping AUC calculation"
+            )
             val_auc = 0.5  # Случайный классификатор
         else:
             try:
@@ -218,8 +212,7 @@ def train_nn_model(
         # Ранняя остановка
         if epoch > 10:
             # Если AUC падает 3 эпохи подряд
-            if all(val_auc_scores[-i] < val_auc_scores[-i - 1]
-                   for i in range(1, 4)):
+            if all(val_auc_scores[-i] < val_auc_scores[-i - 1] for i in range(1, 4)):
                 print(f"Early stopping at epoch {epoch + 1}")
                 break
 
@@ -282,8 +275,7 @@ def main():
     print(f"  Test:  {X_test.shape[0]} samples")
 
     # Подготовка данных для NN
-    X_train_scaled, y_train_array, scaler = prepare_data_for_nn(
-        X_train, y_train)
+    X_train_scaled, y_train_array, scaler = prepare_data_for_nn(X_train, y_train)
     X_val_scaled, y_val_array, _ = prepare_data_for_nn(X_val, y_val)
     X_test_scaled, y_test_array, _ = prepare_data_for_nn(X_test, y_test)
 
@@ -394,10 +386,7 @@ def main():
         plt.grid(True, alpha=0.3)
 
         plt.tight_layout()
-        plt.savefig(
-            "models/nn_training_history.png",
-            dpi=150,
-            bbox_inches="tight")
+        plt.savefig("models/nn_training_history.png", dpi=150, bbox_inches="tight")
         plt.close()
 
         print(f"Training plot: models/nn_training_history.png")

@@ -44,10 +44,7 @@ def load_model_safely(model_path: Path) -> Tuple[nn.Module, Dict]:
 
         try:
             # Временная загрузка для получения input_size
-            temp_data = torch.load(
-                model_path,
-                map_location="cpu",
-                weights_only=False)
+            temp_data = torch.load(model_path, map_location="cpu", weights_only=False)
             if isinstance(temp_data, dict):
                 input_size = temp_data.get("input_size", 32)
                 state_dict = temp_data.get("model_state_dict", {})
@@ -55,9 +52,7 @@ def load_model_safely(model_path: Path) -> Tuple[nn.Module, Dict]:
                 input_size = 32
                 state_dict = {}
 
-            checkpoint = {
-                "model_state_dict": state_dict,
-                "input_size": input_size}
+            checkpoint = {"model_state_dict": state_dict, "input_size": input_size}
             print("✓ Model partially loaded")
         except Exception as e2:
             print(f"All loading methods failed: {e2}")
@@ -233,8 +228,7 @@ def compare_model_metrics(
             metrics["optimized"]["auc"] - metrics["original"]["auc"], 4
         ),
         "accuracy_change": round(
-            metrics["optimized"]["accuracy"] -
-            metrics["original"]["accuracy"], 4
+            metrics["optimized"]["accuracy"] - metrics["original"]["accuracy"], 4
         ),
         "speedup": round(
             metrics["original"]["inference_time_ms"]
@@ -304,16 +298,12 @@ def visualize_comparison(metrics: Dict):
         ax.grid(True, alpha=0.3)
 
         # Добавляем значения на столбцы
-        for i, (orig, opt) in enumerate(
-                zip(original_values, optimized_values)):
+        for i, (orig, opt) in enumerate(zip(original_values, optimized_values)):
             ax.text(i - width / 2, orig + 0.01, f"{orig:.3f}", ha="center")
             ax.text(i + width / 2, opt + 0.01, f"{opt:.3f}", ha="center")
 
         plt.tight_layout()
-        plt.savefig(
-            "models/optimization_comparison.png",
-            dpi=150,
-            bbox_inches="tight")
+        plt.savefig("models/optimization_comparison.png", dpi=150, bbox_inches="tight")
         plt.close()
 
         print("Comparison visualization saved to: models/optimization_comparison.png")
@@ -357,8 +347,7 @@ def run_optimization_pipeline():
         )
 
         X_test_scaled = scaler.transform(X_test)
-        test_data = torch.FloatTensor(
-            X_test_scaled[:100])  # 100 samples для теста
+        test_data = torch.FloatTensor(X_test_scaled[:100])  # 100 samples для теста
         test_targets = torch.FloatTensor(y_test.values[:100]).reshape(-1, 1)
 
         print(f"Test data prepared: {len(test_data)} samples")
