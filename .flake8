@@ -1,0 +1,6 @@
+[flake8]
+exclude = 
+    scripts/compare_performance.py,
+    src/models/convert_to_onnx.py,
+    src/models/nn_model.py,
+    src/models/quantization.py
