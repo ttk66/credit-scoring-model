@@ -67,11 +67,14 @@ def load_pytorch_model(model_path: Path) -> Tuple[torch.nn.Module, Dict]:
             model = CreditScoringNN(input_size=input_size)
 
             # Загружаем только state_dict
-            state_dict = torch.load(model_path, map_location="cpu")["model_state_dict"]
+            state_dict = torch.load(model_path, map_location="cpu")[
+                "model_state_dict"]
             model.load_state_dict(state_dict)
             model.eval()
 
-            checkpoint = {"model_state_dict": state_dict, "input_size": input_size}
+            checkpoint = {
+                "model_state_dict": state_dict,
+                "input_size": input_size}
             print("Model loaded with manual state_dict loading")
         except Exception as e2:
             print(f"All loading methods failed: {e2}")
@@ -166,7 +169,10 @@ def validate_conversion(
 
     # Получаем предсказания от ONNX
     input_name = onnx_session.get_inputs()[0].name
-    onnx_output = onnx_session.run(None, {input_name: test_data.astype(np.float32)})[0]
+    onnx_output = onnx_session.run(
+        None, {
+            input_name: test_data.astype(
+                np.float32)})[0]
 
     # Сравнение результатов
     abs_diff = np.abs(pytorch_output - onnx_output)
@@ -200,7 +206,9 @@ def compare_performance(
 
     # Подготовка данных
     pytorch_input = torch.FloatTensor(test_data)
-    onnx_input = {onnx_session.get_inputs()[0].name: test_data.astype(np.float32)}
+    onnx_input = {
+        onnx_session.get_inputs()[0].name: test_data.astype(
+            np.float32)}
 
     # Тестирование PyTorch
     print("\nPyTorch Inference:")
@@ -219,10 +227,7 @@ def compare_performance(
             _ = pytorch_model(pytorch_input[:1])
 
     torch_time = time.time() - start_time
-    print(
-        f"Total time for {n_iterations} iterations: {
-            torch_time:.4f} seconds"
-    )
+    print(f"Total time for {n_iterations} iterations: {torch_time:.4f} seconds")
     print(f"Time per inference: {(torch_time / n_iterations * 1000):.4f} ms")
 
     # Тестирование ONNX

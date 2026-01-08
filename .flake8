@@ -1,6 +1,12 @@
 [flake8]
+max-line-length = 121
+
 exclude = 
     scripts/compare_performance.py,
     src/models/convert_to_onnx.py,
     src/models/nn_model.py,
-    src/models/quantization.py
+    src/models/quantization.py,
+    scripts/optimize_model.py,
+    scripts/train_and_convert.py,
+    src/models/advanced_quantization.py,
+    structure.py

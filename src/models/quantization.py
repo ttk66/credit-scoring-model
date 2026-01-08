@@ -44,7 +44,10 @@ def load_model_safely(model_path: Path) -> Tuple[nn.Module, Dict]:
 
         try:
             # Временная загрузка для получения input_size
-            temp_data = torch.load(model_path, map_location="cpu", weights_only=False)
+            temp_data = torch.load(
+                model_path,
+                map_location="cpu",
+                weights_only=False)
             if isinstance(temp_data, dict):
                 input_size = temp_data.get("input_size", 32)
                 state_dict = temp_data.get("model_state_dict", {})
@@ -52,7 +55,9 @@ def load_model_safely(model_path: Path) -> Tuple[nn.Module, Dict]:
                 input_size = 32
                 state_dict = {}
 
-            checkpoint = {"model_state_dict": state_dict, "input_size": input_size}
+            checkpoint = {
+                "model_state_dict": state_dict,
+                "input_size": input_size}
             print("✓ Model partially loaded")
         except Exception as e2:
             print(f"All loading methods failed: {e2}")
@@ -228,7 +233,8 @@ def compare_model_metrics(
             metrics["optimized"]["auc"] - metrics["original"]["auc"], 4
         ),
         "accuracy_change": round(
-            metrics["optimized"]["accuracy"] - metrics["original"]["accuracy"], 4
+            metrics["optimized"]["accuracy"] -
+            metrics["original"]["accuracy"], 4
         ),
         "speedup": round(
             metrics["original"]["inference_time_ms"]
@@ -298,12 +304,16 @@ def visualize_comparison(metrics: Dict):
         ax.grid(True, alpha=0.3)
 
         # Добавляем значения на столбцы
-        for i, (orig, opt) in enumerate(zip(original_values, optimized_values)):
+        for i, (orig, opt) in enumerate(
+                zip(original_values, optimized_values)):
             ax.text(i - width / 2, orig + 0.01, f"{orig:.3f}", ha="center")
             ax.text(i + width / 2, opt + 0.01, f"{opt:.3f}", ha="center")
 
         plt.tight_layout()
-        plt.savefig("models/optimization_comparison.png", dpi=150, bbox_inches="tight")
+        plt.savefig(
+            "models/optimization_comparison.png",
+            dpi=150,
+            bbox_inches="tight")
         plt.close()
 
         print("Comparison visualization saved to: models/optimization_comparison.png")
@@ -323,12 +333,7 @@ def run_optimization_pipeline():
 
     try:
         original_model, checkpoint = load_model_safely(MODEL_PATH)
-        print(
-            f"Model loaded: input_size={
-                checkpoint.get(
-                    'input_size',
-                    'N/A')}"
-        )
+        print(f"Model loaded: input_size={checkpoint.get('input_size','N/A')}")
     except Exception as e:
         print(f"Failed to load model: {e}")
         return None
@@ -352,7 +357,8 @@ def run_optimization_pipeline():
         )
 
         X_test_scaled = scaler.transform(X_test)
-        test_data = torch.FloatTensor(X_test_scaled[:100])  # 100 samples для теста
+        test_data = torch.FloatTensor(
+            X_test_scaled[:100])  # 100 samples для теста
         test_targets = torch.FloatTensor(y_test.values[:100]).reshape(-1, 1)
 
         print(f"Test data prepared: {len(test_data)} samples")
@@ -419,15 +425,12 @@ def run_optimization_pipeline():
             },
         }
 
-    # 5. Квантование ONNX модели (если есть)
+    # Квантование ONNX модели
     print("\n5. Quantizing ONNX model...")
     if ONNX_PATH.exists():
         quantized_onnx = quantize_onnx_model(ONNX_PATH, QUANTIZED_ONNX_PATH)
         if quantized_onnx != ONNX_PATH:
-            print(
-                f"ONNX model quantized: {
-                    measure_model_size(quantized_onnx):.2f} MB"
-            )
+            print(f"ONNX model quantized: {measure_model_size(quantized_onnx):.2f} MB")
     else:
         print("ONNX model not found, skipping ONNX quantization")
 
