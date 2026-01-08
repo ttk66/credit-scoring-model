@@ -3,16 +3,15 @@
 Скрипт для оптимизации модели через pruning и quantization
 """
 
+from src.models.advanced_quantization import ONNXQuantizer
+from src.models.quantization import run_optimization_pipeline
+import json
+import argparse
 import sys
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT_DIR))
-
-import argparse
-import json
-from src.models.quantization import run_optimization_pipeline
-from src.models.advanced_quantization import ONNXQuantizer
 
 
 def main():
@@ -90,7 +89,8 @@ def main():
 
         # Сравнение режимов квантования
         quantizer = ONNXQuantizer(Path(args.onnx_model))
-        results = quantizer.compare_quantization_modes(X_scaled, n_iterations=100)
+        results = quantizer.compare_quantization_modes(
+            X_scaled, n_iterations=100)
 
         print("\nQuantization Comparison Results:")
         print("-" * 40)

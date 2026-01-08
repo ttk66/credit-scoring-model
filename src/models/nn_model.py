@@ -1,16 +1,14 @@
 import numpy as np
 import pandas as pd
 import torch
-import io
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, RobustScaler
+from sklearn.preprocessing import RobustScaler
 from sklearn.metrics import roc_auc_score
 import joblib
 from pathlib import Path
-import time
 from typing import Tuple
 import warnings
 
@@ -69,8 +67,10 @@ def prepare_data_for_nn(
         X_scaled = np.nan_to_num(X_scaled, nan=0.0)
 
     print(f"  Data shape: {X_scaled.shape}")
-    print(f"  Scaled data - Min: {X_scaled.min():.4f}, Max: {X_scaled.max():.4f}")
-    print(f"  Scaled data - Mean: {X_scaled.mean():.4f}, Std: {X_scaled.std():.4f}")
+    print(
+        f"  Scaled data - Min: {X_scaled.min():.4f}, Max: {X_scaled.max():.4f}")
+    print(
+        f"  Scaled data - Mean: {X_scaled.mean():.4f}, Std: {X_scaled.std():.4f}")
 
     return X_scaled, y.values, scaler
 
@@ -107,7 +107,10 @@ def train_nn_model(
         torch.FloatTensor(X_val), torch.FloatTensor(y_val).reshape(-1, 1)
     )
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
     # Инициализация модели с инициализацией весов
@@ -120,7 +123,10 @@ def train_nn_model(
             nn.init.zeros_(layer.bias)
 
     criterion = nn.BCELoss()
-    optimizer = optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=1e-4)
+    optimizer = optim.AdamW(
+        model.parameters(),
+        lr=learning_rate,
+        weight_decay=1e-4)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
 
     # Обучение
@@ -184,13 +190,15 @@ def train_nn_model(
         # Проверка корректности
         if np.any(np.isnan(val_predictions_np)):
             print(
-                f"Epoch {epoch+1}: Warning - NaN in predictions, skipping AUC calculation"
+                f"Epoch {
+                    epoch +
+                    1}: Warning - NaN in predictions, skipping AUC calculation"
             )
             val_auc = 0.5  # Случайный классификатор
         else:
             try:
                 val_auc = roc_auc_score(val_targets_np, val_predictions_np)
-            except:
+            except BaseException:
                 val_auc = 0.5
 
         train_losses.append(avg_train_loss)
@@ -204,7 +212,7 @@ def train_nn_model(
 
         # Выводим прогресс каждую эпоху
         print(
-            f"Epoch [{epoch+1:3d}/{epochs}] | "
+            f"Epoch [{epoch + 1:3d}/{epochs}] | "
             f"Train Loss: {avg_train_loss:.4f} | "
             f"Val Loss: {avg_val_loss:.4f} | "
             f"Val AUC: {val_auc:.4f} | "
@@ -214,8 +222,9 @@ def train_nn_model(
         # Ранняя остановка
         if epoch > 10:
             # Если AUC падает 3 эпохи подряд
-            if all(val_auc_scores[-i] < val_auc_scores[-i - 1] for i in range(1, 4)):
-                print(f"Early stopping at epoch {epoch+1}")
+            if all(val_auc_scores[-i] < val_auc_scores[-i - 1]
+                   for i in range(1, 4)):
+                print(f"Early stopping at epoch {epoch + 1}")
                 break
 
     # Загружаем лучшие веса
@@ -247,8 +256,8 @@ def main():
 
     print(f"Data loaded: {X.shape[0]} samples, {X.shape[1]} features")
     print(
-        f"Target distribution: 0={sum(y==0)} ({sum(y==0)/len(y):.2%}), "
-        f"1={sum(y==1)} ({sum(y==1)/len(y):.2%})"
+        f"Target distribution: 0={sum(y == 0)} ({sum(y == 0) / len(y):.2%}), "
+        f"1={sum(y == 1)} ({sum(y == 1) / len(y):.2%})"
     )
 
     # Проверяем NaN в исходных данных
@@ -277,7 +286,8 @@ def main():
     print(f"  Test:  {X_test.shape[0]} samples")
 
     # Подготовка данных для NN
-    X_train_scaled, y_train_array, scaler = prepare_data_for_nn(X_train, y_train)
+    X_train_scaled, y_train_array, scaler = prepare_data_for_nn(
+        X_train, y_train)
     X_val_scaled, y_val_array, _ = prepare_data_for_nn(X_val, y_val)
     X_test_scaled, y_test_array, _ = prepare_data_for_nn(X_test, y_test)
 
@@ -388,7 +398,10 @@ def main():
         plt.grid(True, alpha=0.3)
 
         plt.tight_layout()
-        plt.savefig("models/nn_training_history.png", dpi=150, bbox_inches="tight")
+        plt.savefig(
+            "models/nn_training_history.png",
+            dpi=150,
+            bbox_inches="tight")
         plt.close()
 
         print(f"Training plot: models/nn_training_history.png")

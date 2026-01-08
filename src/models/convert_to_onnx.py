@@ -1,20 +1,18 @@
+import numpy
 import torch
 import onnx
 import onnxruntime as ort
 import numpy as np
-import pandas as pd
 import time
 from pathlib import Path
 import joblib
 from typing import Dict, Tuple
-import io
 
 MODEL_PATH = Path("models/nn_model.pth")
 SCALER_PATH = Path("models/nn_scaler.joblib")
 ONNX_PATH = Path("models/nn_model.onnx")
 
 # Добавляем безопасные глобалы для загрузки модели
-import numpy
 
 torch.serialization.add_safe_globals([numpy._core.multiarray.scalar])
 
@@ -69,11 +67,14 @@ def load_pytorch_model(model_path: Path) -> Tuple[torch.nn.Module, Dict]:
             model = CreditScoringNN(input_size=input_size)
 
             # Загружаем только state_dict
-            state_dict = torch.load(model_path, map_location="cpu")["model_state_dict"]
+            state_dict = torch.load(model_path, map_location="cpu")[
+                "model_state_dict"]
             model.load_state_dict(state_dict)
             model.eval()
 
-            checkpoint = {"model_state_dict": state_dict, "input_size": input_size}
+            checkpoint = {
+                "model_state_dict": state_dict,
+                "input_size": input_size}
             print("Model loaded with manual state_dict loading")
         except Exception as e2:
             print(f"All loading methods failed: {e2}")
@@ -168,7 +169,10 @@ def validate_conversion(
 
     # Получаем предсказания от ONNX
     input_name = onnx_session.get_inputs()[0].name
-    onnx_output = onnx_session.run(None, {input_name: test_data.astype(np.float32)})[0]
+    onnx_output = onnx_session.run(
+        None, {
+            input_name: test_data.astype(
+                np.float32)})[0]
 
     # Сравнение результатов
     abs_diff = np.abs(pytorch_output - onnx_output)
@@ -202,7 +206,9 @@ def compare_performance(
 
     # Подготовка данных
     pytorch_input = torch.FloatTensor(test_data)
-    onnx_input = {onnx_session.get_inputs()[0].name: test_data.astype(np.float32)}
+    onnx_input = {
+        onnx_session.get_inputs()[0].name: test_data.astype(
+            np.float32)}
 
     # Тестирование PyTorch
     print("\nPyTorch Inference:")
@@ -221,7 +227,9 @@ def compare_performance(
             _ = pytorch_model(pytorch_input[:1])
 
     torch_time = time.time() - start_time
-    print(f"Total time for {n_iterations} iterations: {torch_time:.4f} seconds")
+    print(
+        f"Total time for {n_iterations} iterations: {
+            torch_time:.4f} seconds")
     print(f"Time per inference: {(torch_time / n_iterations * 1000):.4f} ms")
 
     # Тестирование ONNX
@@ -250,7 +258,9 @@ def compare_performance(
     if onnx_time > 0:
         speedup = torch_time / onnx_time
         print(
-            f"ONNX is {speedup:.2f}x {'faster' if speedup > 1 else 'slower'} than PyTorch"
+            f"ONNX is {
+                speedup:.2f}x {
+                'faster' if speedup > 1 else 'slower'} than PyTorch"
         )
     else:
         speedup = 0
@@ -287,7 +297,7 @@ def run_complete_pipeline():
             input_size = 32  # Предполагаем
             checkpoint = {"input_size": input_size}
             print(f"Model loaded with torch.jit")
-        except:
+        except BaseException:
             print("All loading methods failed")
             return None
 
@@ -385,7 +395,7 @@ def run_complete_pipeline():
             None, {onnx_session.get_inputs()[0].name: sample_input}
         )[0]
         print(f"ONNX model inference test: output = {onnx_pred[0][0]:.6f}")
-    except:
+    except BaseException:
         print("Could not test ONNX inference")
 
     print("\n" + "=" * 60)

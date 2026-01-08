@@ -1,6 +1,5 @@
 import json
 from pathlib import Path
-import pytest
 from src.data import validation
 
 EXPECT_PATH = Path("data/expectations/expectations.json")

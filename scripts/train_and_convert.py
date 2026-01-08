@@ -2,28 +2,34 @@
 """
 Скрипт для обучения нейронной сети и конвертации в ONNX
 """
+from src.models.convert_to_onnx import run_complete_pipeline
+from src.models.nn_model import main as train_nn
+import argparse
 import sys
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT_DIR))
 
-import argparse
-import json
-from src.models.nn_model import main as train_nn
-from src.models.convert_to_onnx import run_complete_pipeline
-
 
 def main():
-    parser = argparse.ArgumentParser(description="Train NN model and convert to ONNX")
-    parser.add_argument("--train-only", action="store_true", help="Only train NN model")
+    parser = argparse.ArgumentParser(
+        description="Train NN model and convert to ONNX")
+    parser.add_argument(
+        "--train-only",
+        action="store_true",
+        help="Only train NN model")
     parser.add_argument(
         "--convert-only", action="store_true", help="Only convert to ONNX"
     )
     parser.add_argument(
         "--epochs", type=int, default=50, help="Number of training epochs"
     )
-    parser.add_argument("--batch-size", type=int, default=128, help="Batch size")
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=128,
+        help="Batch size")
 
     args = parser.parse_args()
 

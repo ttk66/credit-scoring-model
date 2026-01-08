@@ -3,7 +3,6 @@ import onnxruntime as ort
 import numpy as np
 from pathlib import Path
 import time
-import io
 
 
 class ONNXQuantizer:
@@ -28,7 +27,8 @@ class ONNXQuantizer:
 
         return op_types
 
-    def quantize_to_int8(self, output_path: Path, calibration_data: np.ndarray = None):
+    def quantize_to_int8(self, output_path: Path,
+                         calibration_data: np.ndarray = None):
         """Квантование модели в INT8"""
         import onnxruntime.quantization as quant
 
@@ -99,16 +99,21 @@ class ONNXQuantizer:
         # Оригинальная модель (FP32)
         print("\nTesting original FP32 model...")
         session_fp32 = ort.InferenceSession(str(self.model_path))
-        time_fp32 = self._benchmark_inference(session_fp32, test_data, n_iterations)
-        results["fp32"] = {"time_ms": time_fp32, "size_mb": self._get_model_size()}
+        time_fp32 = self._benchmark_inference(
+            session_fp32, test_data, n_iterations)
+        results["fp32"] = {
+            "time_ms": time_fp32,
+            "size_mb": self._get_model_size()}
 
         # INT8 квантованная модель
         print("\nTesting INT8 quantized model...")
-        int8_path = self.model_path.parent / f"{self.model_path.stem}_int8.onnx"
+        int8_path = self.model_path.parent / \
+            f"{self.model_path.stem}_int8.onnx"
         self.quantize_to_int8(int8_path, test_data[:100])
 
         session_int8 = ort.InferenceSession(str(int8_path))
-        time_int8 = self._benchmark_inference(session_int8, test_data, n_iterations)
+        time_int8 = self._benchmark_inference(
+            session_int8, test_data, n_iterations)
         results["int8"] = {
             "time_ms": time_int8,
             "size_mb": self._get_model_size(int8_path),
@@ -116,11 +121,13 @@ class ONNXQuantizer:
 
         # Float16 квантованная модель
         print("\nTesting Float16 quantized model...")
-        fp16_path = self.model_path.parent / f"{self.model_path.stem}_fp16.onnx"
+        fp16_path = self.model_path.parent / \
+            f"{self.model_path.stem}_fp16.onnx"
         self.quantize_to_float16(fp16_path)
 
         session_fp16 = ort.InferenceSession(str(fp16_path))
-        time_fp16 = self._benchmark_inference(session_fp16, test_data, n_iterations)
+        time_fp16 = self._benchmark_inference(
+            session_fp16, test_data, n_iterations)
         results["fp16"] = {
             "time_ms": time_fp16,
             "size_mb": self._get_model_size(fp16_path),
