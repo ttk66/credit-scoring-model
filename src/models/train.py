@@ -5,7 +5,12 @@ from sklearn.model_selection import train_test_split, RandomizedSearchCV
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import (
-    roc_auc_score, precision_score, recall_score, f1_score, classification_report, RocCurveDisplay
+    roc_auc_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    classification_report,
+    RocCurveDisplay,
 )
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.impute import SimpleImputer
@@ -40,28 +45,33 @@ def load_data():
 
 
 def build_preprocessor(X):
-    explicit_cat = [c for c in ["sex", "education", "marriage", "age_bin"] if c in X.columns]
+    explicit_cat = [
+        c for c in ["sex", "education", "marriage", "age_bin"] if c in X.columns
+    ]
     if explicit_cat:
         categorical_features = explicit_cat
     else:
-        categorical_features = X.select_dtypes(include=["object", "category"]).columns.tolist()
+        categorical_features = X.select_dtypes(
+            include=["object", "category"]
+        ).columns.tolist()
 
     numeric_features = [c for c in X.columns if c not in categorical_features]
 
-    numeric_pipeline = Pipeline(steps=[
-        ("imputer", SimpleImputer(strategy="median")),
-        ("scaler", StandardScaler())
-    ])
+    numeric_pipeline = Pipeline(
+        steps=[
+            ("imputer", SimpleImputer(strategy="median")),
+            ("scaler", StandardScaler()),
+        ]
+    )
     sk_major, sk_minor = map(int, _sklearn_version.split(".")[:2])
     if (sk_major, sk_minor) >= (1, 2):
         ohe = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
     else:
         ohe = OneHotEncoder(handle_unknown="ignore", sparse=False)
 
-    categorical_pipeline = Pipeline(steps=[
-        ("imputer", SimpleImputer(strategy="most_frequent")),
-        ("ohe", ohe)
-    ])
+    categorical_pipeline = Pipeline(
+        steps=[("imputer", SimpleImputer(strategy="most_frequent")), ("ohe", ohe)]
+    )
 
     transformers = []
     if numeric_features:
@@ -79,27 +89,21 @@ def train_model(n_iter: int = 20, cv: int = 5):
     X, y = load_data()
 
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y,
-        test_size=0.2,
-        random_state=42,
-        stratify=y
+        X, y, test_size=0.2, random_state=42, stratify=y
     )
 
     preprocessor = build_preprocessor(X)
 
     model = RandomForestClassifier(random_state=42, n_jobs=-1, class_weight="balanced")
 
-    pipe = Pipeline(steps=[
-        ("preprocess", preprocessor),
-        ("model", model)
-    ])
+    pipe = Pipeline(steps=[("preprocess", preprocessor), ("model", model)])
 
     param_grid = {
         "model__n_estimators": [200, 300, 400, 500],
         "model__max_depth": [None, 6, 8, 10, 12],
         "model__min_samples_split": [2, 5, 10],
         "model__min_samples_leaf": [1, 2, 4],
-        "model__max_features": ["sqrt", "log2"]
+        "model__max_features": ["sqrt", "log2"],
     }
 
     with mlflow.start_run():
@@ -112,7 +116,7 @@ def train_model(n_iter: int = 20, cv: int = 5):
             cv=cv,
             verbose=2,
             n_jobs=-1,
-            random_state=42
+            random_state=42,
         )
 
         search.fit(X_train, y_train)
@@ -130,7 +134,7 @@ def train_model(n_iter: int = 20, cv: int = 5):
             "ROC-AUC": roc_auc_score(y_test, y_prob),
             "Precision": precision_score(y_test, y_pred, zero_division=0),
             "Recall": recall_score(y_test, y_pred, zero_division=0),
-            "F1": f1_score(y_test, y_pred, zero_division=0)
+            "F1": f1_score(y_test, y_pred, zero_division=0),
         }
 
         print("Classification report:")
@@ -154,10 +158,7 @@ def train_model(n_iter: int = 20, cv: int = 5):
         plt.close()
 
         mlflow.log_artifact("roc_curve.png")
-        mlflow.sklearn.log_model(
-            sk_model=best_model,
-            name="model"
-        )
+        mlflow.sklearn.log_model(sk_model=best_model, name="model")
 
         MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
         joblib.dump(best_model, MODEL_PATH)

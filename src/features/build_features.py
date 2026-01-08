@@ -23,7 +23,9 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
 
     df["bill_pay_ratio"] = np.nan
     if valid_mask.any():
-        df.loc[valid_mask, "bill_pay_ratio"] = df.loc[valid_mask, "avg_pay_amt"] / denom[valid_mask]
+        df.loc[valid_mask, "bill_pay_ratio"] = (
+            df.loc[valid_mask, "avg_pay_amt"] / denom[valid_mask]
+        )
 
     df["bill_pay_ratio"] = pd.to_numeric(df["bill_pay_ratio"], errors="coerce")
 
@@ -34,7 +36,9 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     df["bill_pay_ratio"] = df["bill_pay_ratio"].clip(lower=0, upper=5)
 
     n_over_after = int((df["bill_pay_ratio"] > 5).sum())
-    print(f"bill_pay_ratio stats: negatives={n_neg}, >5_before_clip={n_over}, nulls={n_null}, >5_after_clip={n_over_after}")
+    print(
+        f"bill_pay_ratio stats: negatives={n_neg}, >5_before_clip={n_over}, nulls={n_null}, >5_after_clip={n_over_after}"
+    )
 
     pay_status_cols = [f"pay_{i}" for i in range(0, 7) if f"pay_{i}" in df.columns]
     df["num_late_payments"] = (df[pay_status_cols] > 0).sum(axis=1).astype(int)
@@ -55,7 +59,9 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
 
     df["bill_trend"] = df[bill_cols].apply(_slope, axis=1)
 
-    df["age_bin"] = pd.cut(df["age"], bins=[0, 30, 40, 50, 60, 100], labels=False, include_lowest=True)
+    df["age_bin"] = pd.cut(
+        df["age"], bins=[0, 30, 40, 50, 60, 100], labels=False, include_lowest=True
+    )
     for c in ["sex", "education", "marriage", "age_bin"]:
         if c in df.columns:
             df[c] = df[c].astype("category")

@@ -4,6 +4,7 @@ import pandas as pd
 from types import SimpleNamespace
 from sklearn.dummy import DummyClassifier
 
+
 def test_train_model_writes_model_and_metrics(tmp_path, monkeypatch):
     import src.models.train as train
 
@@ -33,7 +34,12 @@ def test_train_model_writes_model_and_metrics(tmp_path, monkeypatch):
     def fake_split(X_in, y_in, test_size, random_state, stratify):
         n = len(X_in)
         split = max(1, int(n * 0.5))
-        return X_in.iloc[:split], X_in.iloc[split:], y_in.iloc[:split], y_in.iloc[split:]
+        return (
+            X_in.iloc[:split],
+            X_in.iloc[split:],
+            y_in.iloc[:split],
+            y_in.iloc[split:],
+        )
 
     monkeypatch.setattr(train, "train_test_split", fake_split)
 

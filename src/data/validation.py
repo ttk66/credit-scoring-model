@@ -18,7 +18,10 @@ def _simple_validate(df: pd.DataFrame, suite: dict):
         info = {}
 
         try:
-            if etype in ("expect_table_row_count_to_be_between", "expect_table_row_count_to_be_greater_than"):
+            if etype in (
+                "expect_table_row_count_to_be_between",
+                "expect_table_row_count_to_be_greater_than",
+            ):
                 min_v = kw.get("min_value")
                 max_v = kw.get("max_value")
                 rc = len(df)
@@ -28,7 +31,10 @@ def _simple_validate(df: pd.DataFrame, suite: dict):
                     success = False
                 info["observed_value"] = rc
 
-            elif etype in ("expect_table_columns_to_match_set", "expect_table_columns_to_contain_set"):
+            elif etype in (
+                "expect_table_columns_to_match_set",
+                "expect_table_columns_to_contain_set",
+            ):
                 required = set(kw.get("column_set", []))
                 dfcols = set(df.columns.tolist())
                 missing = sorted(list(required - dfcols))
@@ -84,7 +90,9 @@ def _simple_validate(df: pd.DataFrame, suite: dict):
             success = False
             info["exception"] = str(e)
 
-        results_list.append({"expectation_type": etype, "success": success, "result": info})
+        results_list.append(
+            {"expectation_type": etype, "success": success, "result": info}
+        )
         if not success:
             all_ok = False
 
@@ -112,7 +120,9 @@ def validate_features(raise_on_fail: bool = True):
         results = _simple_validate(df, suite)
         if not results["success"]:
             if raise_on_fail:
-                raise ValueError("Data validation failed — обнаружены аномалии (simple validator)")
+                raise ValueError(
+                    "Data validation failed — обнаружены аномалии (simple validator)"
+                )
             else:
                 print("Валидация не пройдена (simple validator)")
         else:

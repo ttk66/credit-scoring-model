@@ -1,6 +1,7 @@
 import pandas as pd
 from src.features.build_features import build_features
 
+
 def test_build_features_basic():
     df = pd.read_csv("data/processed/credit_data_processed.csv")
     f = build_features(df)
