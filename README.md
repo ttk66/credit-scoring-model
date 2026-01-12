@@ -66,10 +66,25 @@ python src/build_features.py
 python src/train_model.py
 В результате обученная модель сохраняется в: models/best_model.joblib
 
-
 ** 5. Запуск unit-тестов
 pytest -v
 
-
-** Запуск REST API
+** 6. Запуск REST API
 uvicorn src.api.app:app --reload
+
+API будет доступен по адресу: http://127.0.0.1:8000
+
+Swagger UI: http://127.0.0.1:8000/docs
+
+Сборка и запуск контейнера: docker compose up --build
+
+Проверка работы:
+
+Swagger UI:
+
+http://localhost:8000/docs
+
+
+Healthcheck:
+
+curl http://localhost:8000/health
