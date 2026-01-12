@@ -51,3 +51,25 @@ EDA представлен в папке notebooks, скрипты для заг
 Accuracy, Precision, Recall,
 ROC-AUC
 
+
+
+** 1. Загрузка данных
+python src/data/load_data.py
+
+** 2. Валидация данных
+python src/data/validate_data.py
+
+** 3. Построение признаков
+python src/build_features.py
+
+** 4. Обучение модели
+python src/train_model.py
+В результате обученная модель сохраняется в: models/best_model.joblib
+
+
+** 5. Запуск unit-тестов
+pytest -v
+
+
+** Запуск REST API
+uvicorn src.api.app:app --reload
