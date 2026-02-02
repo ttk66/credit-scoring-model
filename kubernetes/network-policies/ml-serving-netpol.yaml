@@ -1,12 +1,12 @@
 ---
-# Network Policy для ограничения трафика в namespace ml-serving
-# Позволяет:
-# 1. Трафик от ingress controller к API pods
-# 2. Трафик между pods в namespace
-# 3. Исходящий трафик в интернет для downloads
-# Блокирует:
-# 1. Трафик из других namespaces
-# 2. Несанкционированный входящий трафик
+# Network Policy     namespace ml-serving
+# :
+# 1.   ingress controller  API pods
+# 2.   pods  namespace
+# 3.      downloads
+# :
+# 1.    namespaces
+# 2.   
 
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -17,14 +17,14 @@ metadata:
     app: network-policy
     version: v1
 spec:
-  # Применяется ко всем подам в namespace
+  #      namespace
   podSelector: {}
   
-  # По умолчанию блокируем весь входящий трафик
+  #      
   policyTypes:
   - Ingress
   
-  # Разрешаем только трафик от ingress контроллера
+  #     ingress 
   ingress:
   - from:
     - namespaceSelector:
@@ -36,8 +36,8 @@ spec:
           name: kube-system
 
 ---
-# Network Policy для API deployment
-# Разрешает входящий трафик от ingress controller
+# Network Policy  API deployment
+#     ingress controller
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -55,9 +55,9 @@ spec:
   - Ingress
   - Egress
   
-  # Входящий трафик
+  #  
   ingress:
-  # От Nginx Ingress Controller
+  #  Nginx Ingress Controller
   - from:
     - namespaceSelector:
         matchLabels:
@@ -70,7 +70,7 @@ spec:
       port: 9090
       name: metrics
   
-  # От Prometheus в kube-system для сбора метрик
+  #  Prometheus  kube-system   
   - from:
     - namespaceSelector:
         matchLabels:
@@ -83,7 +83,7 @@ spec:
       port: 9090
       name: metrics
   
-  # От других pods в том же namespace (для сервис-сервис коммуникации)
+  #   pods    namespace ( - )
   - from:
     - podSelector: {}
     ports:
@@ -92,9 +92,9 @@ spec:
     - protocol: TCP
       port: 9090
   
-  # Исходящий трафик
+  #  
   egress:
-  # Разрешаем DNS
+  #  DNS
   - to:
     - namespaceSelector:
         matchLabels:
@@ -106,7 +106,7 @@ spec:
     - protocol: UDP
       port: 53
   
-  # Разрешаем трафик к другим сервисам в namespace
+  #       namespace
   - to:
     - podSelector: {}
     ports:
@@ -115,7 +115,7 @@ spec:
     - protocol: TCP
       port: 6379  # Redis
   
-  # Разрешаем исходящий трафик в интернет (для скачивания моделей, обновлений)
+  #      (  , )
   - to:
     - namespaceSelector: {}
     ports:
@@ -125,7 +125,7 @@ spec:
       port: 80   # HTTP
 
 ---
-# Network Policy для базы данных
+# Network Policy   
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -142,7 +142,7 @@ spec:
   policyTypes:
   - Ingress
   
-  # Входящий трафик только от API
+  #     API
   ingress:
   - from:
     - podSelector:
@@ -153,7 +153,7 @@ spec:
       port: 5432
 
 ---
-# Network Policy для Redis
+# Network Policy  Redis
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -170,7 +170,7 @@ spec:
   policyTypes:
   - Ingress
   
-  # Входящий трафик только от API
+  #     API
   ingress:
   - from:
     - podSelector:
@@ -181,8 +181,8 @@ spec:
       port: 6379
 
 ---
-# Network Policy для запрета трафика из других namespaces
-# (уже определено в default-deny, но явно указываем для ясности)
+# Network Policy      namespaces
+# (   default-deny,     )
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -195,5 +195,5 @@ spec:
   policyTypes:
   - Ingress
   
-  # Пусто - не разрешаем трафик (другие правила добавляют исключения)
+  #  -    (   )
   ingress: []

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Скрипт для интерактивного заполнения всех заглушек в конфигурации
-# Использование: bash fill-placeholders.sh
+#        
+# : bash fill-placeholders.sh
 
 set -e
 
@@ -231,7 +231,7 @@ if [[ $HAS_DOMAIN =~ ^[Yy]$ ]]; then
         sed -i "s/app.credit-scoring.example.com/$APP_DOMAIN/g" "$INGRESS_FILE" 2>/dev/null || \
         sed -i '' "s/app.credit-scoring.example.com/$APP_DOMAIN/g" "$INGRESS_FILE"
 
-        print_info "✓ Ingress domains updated"
+        print_info " Ingress domains updated"
     else
         print_info "Ingress file not found at $INGRESS_FILE; skipping domain replacement"
     fi

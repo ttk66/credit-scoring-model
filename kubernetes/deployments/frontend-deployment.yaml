@@ -25,7 +25,7 @@ spec:
         app: credit-scoring-frontend
         version: v1.0.0
       annotations:
-        prometheus.io/scrape: "false"  # Frontend не имеет Prometheus метрик
+        prometheus.io/scrape: "false"  # Frontend   Prometheus 
     spec:
       serviceAccountName: ml-serving-sa
       terminationGracePeriodSeconds: 30

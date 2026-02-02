@@ -16,15 +16,15 @@ terraform {
     }
   }
 
-  # Локальный backend для разработки
-  # Для production используйте remote backend (S3 в Yandex Object Storage)
+  #  backend  
+  #  production  remote backend (S3  Yandex Object Storage)
   # backend "s3" {
   #   endpoint   = "https://storage.yandexcloud.net"
   #   bucket     = "credit-scoring-terraform-state"
   #   region     = "ru-central1"
   #   key        = "terraform.tfstate"
-  #   access_key = ""  # Передать через: terraform init -backend-config="access_key=..."
-  #   secret_key = ""  # Передать через: terraform init -backend-config="secret_key=..."
+  #   access_key = ""  #  : terraform init -backend-config="access_key=..."
+  #   secret_key = ""  #  : terraform init -backend-config="secret_key=..."
   #
   #   skip_region_validation      = true
   #   skip_credentials_validation = true

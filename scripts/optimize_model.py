@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Скрипт для оптимизации модели через pruning и quantization
+     pruning  quantization
 """
 
 from src.models.advanced_quantization import ONNXQuantizer
@@ -59,7 +59,7 @@ def main():
 
         print(f"\nOptimization completed!")
 
-        # Сохраняем краткий отчет
+        #   
         report = {
             "technique": args.technique,
             "pruning_amount": args.pruning_amount,
@@ -79,7 +79,7 @@ def main():
     if args.technique == "compare":
         print("\nComparing quantization modes...")
 
-        # Загрузка тестовых данных для калибровки
+        #     
         from src.models.train import load_data
         import joblib
 
@@ -87,7 +87,7 @@ def main():
         scaler = joblib.load(Path("models/nn_scaler.joblib"))
         X_scaled = scaler.transform(X[:100])
 
-        # Сравнение режимов квантования
+        #   
         quantizer = ONNXQuantizer(Path(args.onnx_model))
         results = quantizer.compare_quantization_modes(X_scaled, n_iterations=100)
 
@@ -98,7 +98,7 @@ def main():
             print(f"  Time per inference: {data['time_ms']:.2f} ms")
             print(f"  Model size: {data['size_mb']:.2f} MB")
 
-        # Сохраняем результаты сравнения
+        #   
         with open("models/quantization_comparison.json", "w") as f:
             json.dump(results, f, indent=2)
 

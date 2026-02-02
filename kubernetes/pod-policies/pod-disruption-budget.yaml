@@ -1,8 +1,8 @@
-# Pod Disruption Budget для API
-# Гарантирует минимальное количество доступных реплик во время:
-# - обновлений узлов
-# - вывода узлов из сервиса
-# - плановых перезагрузок
+# Pod Disruption Budget  API
+#       :
+# -  
+# -    
+# -  
 
 ---
 apiVersion: policy/v1
@@ -13,18 +13,18 @@ metadata:
   labels:
     app: credit-scoring-api
 spec:
-  # Минимум 2 реплики должны остаться доступны
+  #  2    
   minAvailable: 2
   
   selector:
     matchLabels:
       app: credit-scoring-api
   
-  # Не преерывать поды с системными фейлурами
+  #      
   unhealthyPodEvictionPolicy: IfHealthyBudget
 
 ---
-# PodDisruptionBudget для базы данных
+# PodDisruptionBudget   
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
@@ -33,7 +33,7 @@ metadata:
   labels:
     app: database
 spec:
-  # Минимум 1 реплика БД должна быть доступна
+  #  1     
   minAvailable: 1
   
   selector:
@@ -41,7 +41,7 @@ spec:
       app: database
 
 ---
-# PodDisruptionBudget для Redis
+# PodDisruptionBudget  Redis
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
@@ -50,7 +50,7 @@ metadata:
   labels:
     app: redis
 spec:
-  # Минимум 1 реплика Redis должна быть доступна
+  #  1  Redis   
   minAvailable: 1
   
   selector:

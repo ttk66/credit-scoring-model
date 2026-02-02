@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Сравнение производительности всех моделей: Random Forest, PyTorch NN, ONNX, Оптимизированная
+   : Random Forest, PyTorch NN, ONNX, 
 """
 
 import warnings
@@ -21,7 +21,7 @@ sys.path.insert(0, str(ROOT_DIR))
 
 warnings.filterwarnings("ignore")
 
-# Пути к моделям
+#   
 MODEL_PATHS = {
     "random_forest": Path("models/best_model.joblib"),
     "pytorch_nn": Path("models/nn_model.pth"),
@@ -35,7 +35,7 @@ RESULTS_PATH = Path("models/performance_comparison_final.json")
 
 
 class PerformanceComparator:
-    """Сравнение производительности всех моделей"""
+    """   """
 
     def __init__(self, iterations: int = 1000, batch_sizes: List[int] = None):
         self.iterations = iterations
@@ -47,17 +47,17 @@ class PerformanceComparator:
         self.devices = ["cpu"]
         if torch.cuda.is_available():
             self.devices.append("cuda")
-            print(f"GPU доступен: {torch.cuda.get_device_name(0)}")
+            print(f"GPU : {torch.cuda.get_device_name(0)}")
         else:
-            print("GPU не доступен, тестирование только на CPU")
+            print("GPU  ,    CPU")
 
     def load_all_models(self):
-        """Загрузка всех доступных моделей"""
+        """   """
         print("\n" + "=" * 60)
         print("LOADING MODELS")
         print("=" * 60)
 
-        # Загрузка Random Forest
+        #  Random Forest
         if MODEL_PATHS["random_forest"].exists():
             try:
                 import joblib
@@ -67,7 +67,7 @@ class PerformanceComparator:
             except Exception as e:
                 print(f"Failed to load Random Forest: {e}")
 
-        # Загрузка PyTorch NN
+        #  PyTorch NN
         if MODEL_PATHS["pytorch_nn"].exists():
             try:
                 import numpy
@@ -89,7 +89,7 @@ class PerformanceComparator:
             except Exception as e:
                 print(f"Failed to load PyTorch NN: {e}")
 
-        # Загрузка ONNX NN
+        #  ONNX NN
         if MODEL_PATHS["onnx_nn"].exists():
             try:
                 import onnxruntime as ort
@@ -101,7 +101,7 @@ class PerformanceComparator:
             except Exception as e:
                 print(f"Failed to load ONNX NN: {e}")
 
-        # Загрузка оптимизированной модели
+        #   
         if MODEL_PATHS["optimized_nn"].exists():
             try:
                 import numpy
@@ -123,7 +123,7 @@ class PerformanceComparator:
             except Exception as e:
                 print(f"Failed to load optimized NN: {e}")
 
-        # Загрузка квантованной ONNX модели
+        #   ONNX 
         if MODEL_PATHS["onnx_optimized"].exists():
             try:
                 import onnxruntime as ort
@@ -136,7 +136,7 @@ class PerformanceComparator:
             except Exception as e:
                 print(f"Failed to load quantized ONNX: {e}")
 
-        # Загрузка скейлера
+        #  
         try:
             import joblib
 
@@ -151,19 +151,19 @@ class PerformanceComparator:
             print(f"  - {name}")
 
     def prepare_test_data(self, n_samples: int = 1000) -> np.ndarray:
-        """Подготовка тестовых данных"""
+        """  """
         print(f"\nPreparing test data ({n_samples} samples)...")
 
-        # Генерация реалистичных данных
+        #   
         np.random.seed(42)
 
-        # Основные фичи
+        #  
         n_features = 32
 
-        # Генерация данных
+        #  
         test_data = np.random.randn(n_samples, n_features)
 
-        # Масштабирование если есть скейлер
+        #    
         if self.scaler is not None:
             test_data = self.scaler.transform(test_data)
 
@@ -175,10 +175,10 @@ class PerformanceComparator:
     def benchmark_random_forest(
         self, model, test_data: np.ndarray, batch_size: int
     ) -> Dict:
-        """Бенчмарк Random Forest модели"""
+        """ Random Forest """
         results = {"time_ms": 0, "predictions_per_second": 0, "memory_mb": 0}
 
-        # Создаем DataFrame с именами колонок
+        #  DataFrame   
         feature_names = [
             "limit_bal",
             "sex",
@@ -220,7 +220,7 @@ class PerformanceComparator:
         for _ in range(10):
             _ = model.predict_proba(df.iloc[:1])
 
-        # Бенчмарк
+        # 
         start_time = time.time()
 
         for i in range(0, len(df), batch_size):
@@ -233,7 +233,7 @@ class PerformanceComparator:
         results["time_ms"] = total_time * 1000
         results["predictions_per_second"] = n_predictions / total_time
 
-        # Оценка памяти
+        #  
         import joblib
         import io
 
@@ -244,7 +244,7 @@ class PerformanceComparator:
         return results
 
     def measure_system_resources(self) -> Dict:
-        """Измерение системных ресурсов"""
+        """  """
         import psutil
 
         resources = {
@@ -254,7 +254,7 @@ class PerformanceComparator:
             "memory_total_mb": psutil.virtual_memory().total / (1024 * 1024),
         }
 
-        # Измерение GPU если доступно
+        #  GPU  
         if torch.cuda.is_available():
             resources["gpu_name"] = torch.cuda.get_device_name(0)
             resources["gpu_memory_total_mb"] = torch.cuda.get_device_properties(
@@ -266,7 +266,7 @@ class PerformanceComparator:
     def benchmark_pytorch(
         self, model, test_data: np.ndarray, batch_size: int, device: str = "cpu"
     ) -> Dict:
-        """Бенчмарк PyTorch модели на указанном устройстве"""
+        """ PyTorch    """
         results = {
             "time_ms": 0,
             "predictions_per_second": 0,
@@ -276,12 +276,12 @@ class PerformanceComparator:
 
         import io
 
-        # Переносим модель на устройство
+        #    
         device_obj = torch.device(device)
         model_on_device = model.to(device_obj)
         model_on_device.eval()
 
-        # Конвертация в тензор и перенос на устройство
+        #       
         test_tensor = torch.FloatTensor(test_data).to(device_obj)
 
         # Warmup
@@ -289,11 +289,11 @@ class PerformanceComparator:
             for _ in range(10):
                 _ = model_on_device(test_tensor[:1])
 
-            # Синхронизация для GPU
+            #   GPU
             if device == "cuda":
                 torch.cuda.synchronize()
 
-        # Бенчмарк
+        # 
         start_time = time.time()
 
         with torch.no_grad():
@@ -301,7 +301,7 @@ class PerformanceComparator:
                 batch = test_tensor[i : i + batch_size]
                 _ = model_on_device(batch)
 
-            # Синхронизация для GPU
+            #   GPU
             if device == "cuda":
                 torch.cuda.synchronize()
 
@@ -311,14 +311,14 @@ class PerformanceComparator:
         results["time_ms"] = total_time * 1000
         results["predictions_per_second"] = n_predictions / total_time
 
-        # Измерение использования памяти GPU
+        #    GPU
         if device == "cuda":
             results["gpu_memory_mb"] = torch.cuda.max_memory_allocated() / (1024 * 1024)
             torch.cuda.reset_peak_memory_stats()
         else:
             results["gpu_memory_mb"] = 0
 
-        # Оценка памяти модели
+        #   
         buffer = io.BytesIO()
         torch.save(model.state_dict(), buffer)
         results["memory_mb"] = len(buffer.getvalue()) / (1024 * 1024)
@@ -326,7 +326,7 @@ class PerformanceComparator:
         return results
 
     def benchmark_onnx(self, session, test_data: np.ndarray, batch_size: int) -> Dict:
-        """Бенчмарк ONNX модели"""
+        """ ONNX """
         results = {"time_ms": 0, "predictions_per_second": 0, "memory_mb": 0}
 
         input_name = session.get_inputs()[0].name
@@ -335,7 +335,7 @@ class PerformanceComparator:
         for _ in range(10):
             session.run(None, {input_name: test_data[:1]})
 
-        # Бенчмарк
+        # 
         start_time = time.time()
 
         for i in range(0, len(test_data), batch_size):
@@ -348,7 +348,7 @@ class PerformanceComparator:
         results["time_ms"] = total_time * 1000
         results["predictions_per_second"] = n_predictions / total_time
 
-        # Оценка памяти
+        #  
 
         for path in MODEL_PATHS.values():
             if "onnx" in str(path).lower() and path.exists():
@@ -358,7 +358,7 @@ class PerformanceComparator:
         return results
 
     def run_benchmarks(self):
-        """Запуск всех бенчмарков"""
+        """  """
         print("\n" + "=" * 60)
         print("RUNNING BENCHMARKS")
         print("=" * 60)
@@ -366,7 +366,7 @@ class PerformanceComparator:
         print(f"Batch sizes: {self.batch_sizes}")
         print(f"Devices: {self.devices}")
 
-        # Измерение системных ресурсов до тестов
+        #     
         print("\nSystem resources before tests:")
         before_resources = self.measure_system_resources()
         print(f"  CPU: {before_resources['cpu_percent']:.1f}%")
@@ -374,7 +374,7 @@ class PerformanceComparator:
             f"  Memory: {before_resources['memory_used_mb']:.1f} MB / {before_resources['memory_total_mb']:.1f} MB"
         )
 
-        # Подготовка данных
+        #  
         test_data = self.prepare_test_data(n_samples=1000)
 
         all_results = {}
@@ -391,7 +391,7 @@ class PerformanceComparator:
                 batch_results = {}
 
                 for model_name, model in self.models.items():
-                    # Тестируем только PyTorch модели на GPU
+                    #   PyTorch   GPU
                     if device == "cuda" and model_name not in [
                         "pytorch_nn",
                         "optimized_nn",
@@ -408,7 +408,7 @@ class PerformanceComparator:
                         elif "onnx" in model_name:
                             results = self.benchmark_onnx(model, test_data, batch_size)
                         else:
-                            # Для PyTorch моделей указываем устройство
+                            #  PyTorch   
                             results = self.benchmark_pytorch(
                                 model, test_data, batch_size, device
                             )
@@ -416,7 +416,7 @@ class PerformanceComparator:
                         results["device"] = device
                         batch_results[f"{model_name}_{device}"] = results
 
-                        # Добавляем информацию о памяти GPU
+                        #     GPU
                         if device == "cuda" and "gpu_memory_mb" in results:
                             print(
                                 f"{
@@ -437,7 +437,7 @@ class PerformanceComparator:
 
                 all_results[f"batch_{batch_size}_{device}"] = batch_results
 
-        # Измерение системных ресурсов после тестов
+        #     
         print("\nSystem resources after tests:")
         after_resources = self.measure_system_resources()
         print(f"  CPU: {after_resources['cpu_percent']:.1f}%")
@@ -451,10 +451,10 @@ class PerformanceComparator:
         return all_results
 
     def calculate_speedup(self):
-        """Расчет ускорения между моделями"""
+        """   """
         speedup_results = {}
 
-        # Используем средний batch size для сравнения
+        #   batch size  
         if not self.batch_sizes:
             return {}
 
@@ -467,14 +467,14 @@ class PerformanceComparator:
         batch_results = self.results[batch_key]
         speedups = {}
 
-        # Получаем скорости для всех моделей
+        #     
         model_speeds = {}
         for model_key, metrics in batch_results.items():
             speed = metrics.get("predictions_per_second", 0)
             model_name = model_key.replace("_cpu", "")
             model_speeds[model_name] = speed
 
-        # Сравнение PyTorch vs ONNX
+        #  PyTorch vs ONNX
         if "pytorch_nn" in model_speeds and "onnx_nn" in model_speeds:
             pytorch_speed = model_speeds["pytorch_nn"]
             onnx_speed = model_speeds["onnx_nn"]
@@ -488,7 +488,7 @@ class PerformanceComparator:
                     "description": f"ONNX is {speedup:.2f}x faster than PyTorch",
                 }
 
-        # Сравнение Random Forest vs ONNX
+        #  Random Forest vs ONNX
         if "random_forest" in model_speeds and "onnx_nn" in model_speeds:
             rf_speed = model_speeds["random_forest"]
             onnx_speed = model_speeds["onnx_nn"]
@@ -502,7 +502,7 @@ class PerformanceComparator:
                     "description": f"ONNX is {speedup:.2f}x faster than Random Forest",
                 }
 
-        # Сравнение оригинальной vs оптимизированной
+        #   vs 
         if "pytorch_nn" in model_speeds and "optimized_nn" in model_speeds:
             original_speed = model_speeds["pytorch_nn"]
             optimized_speed = model_speeds["optimized_nn"]
@@ -522,14 +522,14 @@ class PerformanceComparator:
         return speedup_results
 
     def create_visualizations(self):
-        """Создание визуализаций сравнения"""
+        """  """
         print("\nCreating visualizations...")
 
         try:
-            # 1. Сравнение CPU vs GPU для PyTorch моделей
+            # 1.  CPU vs GPU  PyTorch 
             plt.figure(figsize=(15, 10))
 
-            # График 1: Сравнение CPU vs GPU
+            #  1:  CPU vs GPU
             plt.subplot(2, 2, 1)
 
             cpu_gpu_data = {}
@@ -588,7 +588,7 @@ class PerformanceComparator:
             plt.legend()
             plt.grid(True, alpha=0.3)
 
-            # График 2: Ускорение GPU vs CPU
+            #  2:  GPU vs CPU
             plt.subplot(2, 2, 2)
 
             speedup_by_batch = {}
@@ -646,14 +646,14 @@ class PerformanceComparator:
                 plt.legend()
                 plt.grid(True, alpha=0.3)
 
-            # Сохраняем визуализацию CPU/GPU
+            #   CPU/GPU
             plt.tight_layout()
             plt.savefig("models/cpu_gpu_comparison.png", dpi=150, bbox_inches="tight")
             plt.close()
 
             print("CPU/GPU comparison saved: models/cpu_gpu_comparison.png")
 
-            # 2. Сравнение всех моделей
+            # 2.   
             plt.figure(figsize=(14, 10))
 
             model_names = []
@@ -681,7 +681,7 @@ class PerformanceComparator:
                     avg_speeds.append(np.mean(speeds))
                     avg_times.append(np.mean(times))
 
-                    # Получаем размер модели
+                    #   
                     model_size = 0
                     for path in MODEL_PATHS.values():
                         if model_name in str(path).lower() and path.exists():
@@ -689,7 +689,7 @@ class PerformanceComparator:
                             break
                     model_sizes.append(model_size)
 
-            # Средняя скорость
+            #  
             plt.subplot(2, 2, 1)
             colors = plt.cm.Set3(np.linspace(0, 1, len(model_names)))
             bars1 = plt.bar(model_names, avg_speeds, color=colors)
@@ -699,7 +699,7 @@ class PerformanceComparator:
             plt.xticks(rotation=45, ha="right")
             plt.grid(True, alpha=0.3)
 
-            # Добавляем значения
+            #  
             for bar, speed in zip(bars1, avg_speeds):
                 plt.text(
                     bar.get_x() + bar.get_width() / 2,
@@ -709,7 +709,7 @@ class PerformanceComparator:
                     fontsize=9,
                 )
 
-            # Время инференса
+            #  
             plt.subplot(2, 2, 2)
             bars2 = plt.bar(model_names, avg_times, color=colors)
             plt.xlabel("Model")
@@ -727,7 +727,7 @@ class PerformanceComparator:
                     fontsize=9,
                 )
 
-            # Размер модели
+            #  
             plt.subplot(2, 2, 3)
             bars3 = plt.bar(model_names, model_sizes, color=colors)
             plt.xlabel("Model")
@@ -745,7 +745,7 @@ class PerformanceComparator:
                     fontsize=9,
                 )
 
-            # Ускорение относительно PyTorch
+            #   PyTorch
             plt.subplot(2, 2, 4)
             speedup_data = self.calculate_speedup()
 
@@ -840,10 +840,10 @@ class PerformanceComparator:
             print(f"Visualization error: {e}")
 
     def generate_summary_report(self):
-        """Генерация итогового отчета"""
+        """  """
         print("\nGenerating summary report...")
 
-        # Находим лучшую модель
+        #   
         best_model_name = None
         best_speed = 0
         best_batch_size = None
@@ -853,17 +853,17 @@ class PerformanceComparator:
                 speed = metrics.get("predictions_per_second", 0)
                 if speed > best_speed:
                     best_speed = speed
-                    # Извлекаем имя модели без суффикса _cpu
+                    #      _cpu
                     best_model_name = model_key.replace("_cpu", "")
-                    # Извлекаем batch size из ключа
+                    #  batch size  
                     best_batch_size = batch_key.replace("batch_", "").replace(
                         "_cpu", ""
                     )
 
-        # Собираем метрики по всем моделям
+        #     
         performance_summary = {}
 
-        # Список имен моделей без суффиксов
+        #     
         base_model_names = ["random_forest", "pytorch_nn", "onnx_nn", "optimized_nn"]
 
         for base_name in base_model_names:
@@ -910,7 +910,7 @@ class PerformanceComparator:
                     "model_size_mb": model_size_mb,
                 }
 
-        # Формируем отчет
+        #  
         summary = {
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
             "benchmark_config": {
@@ -934,7 +934,7 @@ class PerformanceComparator:
             ],
         }
 
-        # Добавляем анализ ускорения
+        #   
         if "onnx_nn" in performance_summary and "pytorch_nn" in performance_summary:
             onnx_speed = performance_summary["onnx_nn"]["avg_speed"]
             pytorch_speed = performance_summary["pytorch_nn"]["avg_speed"]
@@ -948,7 +948,7 @@ class PerformanceComparator:
         return summary
 
     def save_results(self):
-        """Сохранение результатов"""
+        """ """
         print("\nSaving results...")
 
         summary = self.generate_summary_report()
@@ -982,14 +982,14 @@ class PerformanceComparator:
         return full_results
 
     def print_final_report(self):
-        """Вывод финального отчета"""
+        """  """
         print("\n" + "=" * 70)
         print("FINAL PERFORMANCE COMPARISON REPORT")
         print("=" * 70)
 
         summary = self.generate_summary_report()
 
-        # Лучшая модель
+        #  
         print(
             f"\nBEST MODEL: {
                 summary['best_model']['name'].replace(
@@ -1000,7 +1000,7 @@ class PerformanceComparator:
                 summary['best_model']['avg_speed']:.1f} predictions/second"
         )
 
-        # Сводка по всем моделям
+        #    
         print(f"\nPERFORMANCE SUMMARY:")
         print("-" * 60)
         print(f"{'Model':25} {'Speed (pred/s)':15} {'Time (ms)':12} {'Size (MB)':10}")
@@ -1016,7 +1016,7 @@ class PerformanceComparator:
                     metrics['model_size_mb']:10.2f}"
             )
 
-        # Анализ ускорения
+        #  
         print(f"\nSPEEDUP ANALYSIS:")
         print("-" * 60)
 
@@ -1028,7 +1028,7 @@ class PerformanceComparator:
                 print(f"  {comp_display}:")
                 print(f"    {comp_data['description']}")
 
-        # Рекомендации
+        # 
         print(f"\nRECOMMENDATIONS:")
         print("-" * 60)
         for i, rec in enumerate(summary["recommendations"], 1):
@@ -1061,7 +1061,7 @@ def main():
 
     args = parser.parse_args()
 
-    # Преобразуем batch sizes
+    #  batch sizes
     batch_sizes = [int(bs.strip()) for bs in args.batch_sizes.split(",")]
 
     if args.simple:
@@ -1075,12 +1075,12 @@ def main():
     print(f"Batch sizes: {batch_sizes}")
     print(f"Mode: {'Simple' if args.simple else 'Full'}")
 
-    # Создаем компаратор
+    #  
     comparator = PerformanceComparator(
         iterations=args.iterations, batch_sizes=batch_sizes
     )
 
-    # Загрузка моделей
+    #  
     comparator.load_all_models()
 
     if not comparator.models:

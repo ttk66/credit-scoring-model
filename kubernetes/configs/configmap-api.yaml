@@ -6,7 +6,7 @@ metadata:
   labels:
     app: credit-scoring-api
 data:
-  # Конфигурация приложения
+  #  
   app-config.yaml: |
     api:
       version: "1.0.0"
@@ -35,13 +35,13 @@ data:
       ttl_seconds: 3600
       max_size: 10000
   
-  # Переменные окружения
+  #  
   log-level: "INFO"
   batch-size: "32"
   feature-store-url: "http://feature-store-service:8080"
   model-registry-url: "http://model-registry-service:8080"
   
-  # Настройки DVC
+  #  DVC
   dvc-config: |
     core:
       remote: s3remote

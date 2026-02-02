@@ -19,7 +19,7 @@ SCALER_PATH = Path("models/nn_scaler.joblib")
 
 
 class CreditScoringNN(nn.Module):
-    """Нейронная сеть для кредитного скоринга"""
+    """    """
 
     def __init__(self, input_size: int, dropout_rate: float = 0.3):
         super(CreditScoringNN, self).__init__()
@@ -44,24 +44,24 @@ class CreditScoringNN(nn.Module):
 def prepare_data_for_nn(
     X: pd.DataFrame, y: pd.Series
 ) -> Tuple[np.ndarray, np.ndarray, RobustScaler]:
-    """Подготовка данных для нейронной сети"""
+    """    """
     print("\nPreprocessing data...")
 
-    # Копируем и заполняем NaN
+    #    NaN
     X_clean = X.copy()
 
-    # Заполняем NaN медианами по колонкам
+    #  NaN   
     for col in X_clean.columns:
         if X_clean[col].isna().any():
             median_val = X_clean[col].median()
             X_clean[col] = X_clean[col].fillna(median_val)
             print(f"  Filled NaN in {col} with median: {median_val:.4f}")
 
-    # Используем RobustScaler вместо StandardScaler (устойчивее к выбросам)
+    #  RobustScaler  StandardScaler (  )
     scaler = RobustScaler(quantile_range=(25, 75))
     X_scaled = scaler.fit_transform(X_clean)
 
-    # Проверяем на NaN после масштабирования
+    #   NaN  
     if np.isnan(X_scaled).any():
         print(f"Warning: NaN after scaling, filling with 0")
         X_scaled = np.nan_to_num(X_scaled, nan=0.0)
@@ -74,8 +74,8 @@ def prepare_data_for_nn(
 
 
 def safe_clip_predictions(predictions: torch.Tensor) -> torch.Tensor:
-    """Безопасное ограничение предсказаний"""
-    # Ограничиваем очень маленькими значениями, но не 0 и 1
+    """  """
+    #    ,   0  1
     return torch.clamp(predictions, 1e-7, 1 - 1e-7)
 
 
@@ -89,7 +89,7 @@ def train_nn_model(
     batch_size: int = 128,
     learning_rate: float = 0.001,
 ) -> Tuple[CreditScoringNN, dict]:
-    """Обучение нейронной сети"""
+    """  """
 
     print(f"\nTraining setup:")
     print(f"  Input size: {input_size}")
@@ -97,7 +97,7 @@ def train_nn_model(
     print(f"  Batch size: {batch_size}")
     print(f"  Learning rate: {learning_rate}")
 
-    # Создание даталоадеров
+    #  
     train_dataset = TensorDataset(
         torch.FloatTensor(X_train), torch.FloatTensor(y_train).reshape(-1, 1)
     )
@@ -108,10 +108,10 @@ def train_nn_model(
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
-    # Инициализация модели с инициализацией весов
+    #     
     model = CreditScoringNN(input_size=input_size)
 
-    # Xavier инициализация весов
+    # Xavier  
     for layer in model.network:
         if isinstance(layer, nn.Linear):
             nn.init.xavier_uniform_(layer.weight)
@@ -121,7 +121,7 @@ def train_nn_model(
     optimizer = optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=1e-4)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
 
-    # Обучение
+    # 
     train_losses = []
     val_losses = []
     val_auc_scores = []
@@ -133,7 +133,7 @@ def train_nn_model(
     best_model_state = None
 
     for epoch in range(epochs):
-        # Тренировка
+        # 
         model.train()
         train_loss = 0.0
 
@@ -141,13 +141,13 @@ def train_nn_model(
             optimizer.zero_grad()
             predictions = model(batch_X)
 
-            # Безопасное ограничение предсказаний
+            #   
             predictions = safe_clip_predictions(predictions)
 
             loss = criterion(predictions, batch_y)
             loss.backward()
 
-            # Gradient clipping для стабильности
+            # Gradient clipping  
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.5)
 
             optimizer.step()
@@ -155,7 +155,7 @@ def train_nn_model(
 
         scheduler.step()
 
-        # Валидация
+        # 
         model.eval()
         val_loss = 0.0
         val_predictions = []
@@ -171,20 +171,20 @@ def train_nn_model(
                 val_predictions.extend(predictions.numpy())
                 val_targets.extend(batch_y.numpy())
 
-        # Расчет метрик
+        #  
         avg_train_loss = train_loss / len(train_loader)
         avg_val_loss = val_loss / len(val_loader)
 
-        # Обработка предсказаний перед расчетом AUC
+        #     AUC
         val_predictions_np = np.array(val_predictions).flatten()
         val_targets_np = np.array(val_targets).flatten()
 
-        # Проверка корректности
+        #  
         if np.any(np.isnan(val_predictions_np)):
             print(
                 f"Epoch {epoch +1}: Warning - NaN in predictions, skipping AUC calculation"
             )
-            val_auc = 0.5  # Случайный классификатор
+            val_auc = 0.5  #  
         else:
             try:
                 val_auc = roc_auc_score(val_targets_np, val_predictions_np)
@@ -195,12 +195,12 @@ def train_nn_model(
         val_losses.append(avg_val_loss)
         val_auc_scores.append(val_auc)
 
-        # Сохранение лучшей модели
+        #   
         if val_auc > best_val_auc:
             best_val_auc = val_auc
             best_model_state = model.state_dict().copy()
 
-        # Выводим прогресс каждую эпоху
+        #    
         print(
             f"Epoch [{epoch + 1:3d}/{epochs}] | "
             f"Train Loss: {avg_train_loss:.4f} | "
@@ -209,14 +209,14 @@ def train_nn_model(
             f"LR: {scheduler.get_last_lr()[0]:.6f}"
         )
 
-        # Ранняя остановка
+        #  
         if epoch > 10:
-            # Если AUC падает 3 эпохи подряд
+            #  AUC  3  
             if all(val_auc_scores[-i] < val_auc_scores[-i - 1] for i in range(1, 4)):
                 print(f"Early stopping at epoch {epoch + 1}")
                 break
 
-    # Загружаем лучшие веса
+    #   
     if best_model_state is not None:
         model.load_state_dict(best_model_state)
 
@@ -232,14 +232,14 @@ def train_nn_model(
 
 
 def main():
-    """Основная функция для обучения NN модели"""
+    """    NN """
     from src.models.train import load_data
 
     print("=" * 70)
     print("TRAINING NEURAL NETWORK FOR CREDIT SCORING")
     print("=" * 70)
 
-    # Загрузка данных
+    #  
     print("\nLoading data...")
     X, y = load_data()
 
@@ -249,7 +249,7 @@ def main():
         f"1={sum(y == 1)} ({sum(y == 1) / len(y):.2%})"
     )
 
-    # Проверяем NaN в исходных данных
+    #  NaN   
     print(f"\nChecking data quality...")
     nan_counts = X.isna().sum()
     if nan_counts.any():
@@ -259,7 +259,7 @@ def main():
     else:
         print(f"No NaN values found")
 
-    # Разделение данных
+    #  
     print(f"\nSplitting data...")
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42, stratify=y
@@ -274,12 +274,12 @@ def main():
     print(f"  Val:   {X_val.shape[0]} samples")
     print(f"  Test:  {X_test.shape[0]} samples")
 
-    # Подготовка данных для NN
+    #    NN
     X_train_scaled, y_train_array, scaler = prepare_data_for_nn(X_train, y_train)
     X_val_scaled, y_val_array, _ = prepare_data_for_nn(X_val, y_val)
     X_test_scaled, y_test_array, _ = prepare_data_for_nn(X_test, y_test)
 
-    # Обучение модели
+    #  
     input_size = X_train_scaled.shape[1]
     print(f"\n" + "=" * 70)
 
@@ -294,7 +294,7 @@ def main():
         learning_rate=0.0003,
     )
 
-    # Оценка на тестовых данных
+    #    
     print(f"\n" + "=" * 70)
     print("EVALUATING ON TEST SET")
     print("=" * 70)
@@ -307,7 +307,7 @@ def main():
 
     test_auc = roc_auc_score(y_test_array, y_pred_proba)
 
-    # Расчет accuracy
+    #  accuracy
     y_pred = (y_pred_proba >= 0.5).astype(int)
     test_accuracy = np.mean(y_pred == y_test_array)
 
@@ -316,7 +316,7 @@ def main():
     print(f"  Accuracy:  {test_accuracy:.4f}")
     print(f"  Best Val AUC: {metrics['best_val_auc']:.4f}")
 
-    # Сохранение модели и скейлера
+    #    
     MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
 
     torch.save(
@@ -339,7 +339,7 @@ def main():
     print(f"Model:      {MODEL_PATH}")
     print(f"Scaler:     {SCALER_PATH}")
 
-    # Сохранение метрик
+    #  
     metrics_path = Path("models/nn_model_metrics.json")
     import json
 
@@ -361,7 +361,7 @@ def main():
 
     print(f"Metrics:    {metrics_path}")
 
-    # Визуализация кривой обучения
+    #   
     try:
         import matplotlib.pyplot as plt
 

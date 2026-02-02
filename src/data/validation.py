@@ -101,9 +101,9 @@ def _simple_validate(df: pd.DataFrame, suite: dict):
 
 def validate_features(raise_on_fail: bool = True):
     """
-    Валидирует подготовленные признаки с использованием expectation-suite.
-    В случаях, когда установлен Great Expectations старой/неподдерживаемой версии,
-    используется локальный простой валидатор (fallback).
+         expectation-suite.
+     ,   Great Expectations / ,
+        (fallback).
     """
     df = pd.read_csv(FEATURES_PATH)
 
@@ -116,20 +116,20 @@ def validate_features(raise_on_fail: bool = True):
     try:
         gdf = ge.from_pandas(df)
     except Exception:
-        # Fallback на простой валидатор
+        # Fallback   
         results = _simple_validate(df, suite)
         if not results["success"]:
             if raise_on_fail:
                 raise ValueError(
-                    "Data validation failed — обнаружены аномалии (simple validator)"
+                    "Data validation failed    (simple validator)"
                 )
             else:
-                print("Валидация не пройдена (simple validator)")
+                print("   (simple validator)")
         else:
             print("Validation passed successfully (simple validator)")
         return results
 
-    # Если ge.from_pandas сработал, применяем ожидания через GE
+    #  ge.from_pandas ,    GE
     for exp in suite["expectations"]:
         gdf.validate(expectation_suite={"expectations": [exp]})
 
@@ -137,9 +137,9 @@ def validate_features(raise_on_fail: bool = True):
 
     if not results.get("success", False):
         if raise_on_fail:
-            raise ValueError("Data validation failed — обнаружены аномалии")
+            raise ValueError("Data validation failed   ")
         else:
-            print("Валидация не пройдена")
+            print("  ")
     else:
         print("Validation passed successfully")
 

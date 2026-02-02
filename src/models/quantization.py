@@ -14,13 +14,13 @@ QUANTIZED_ONNX_PATH = Path("models/nn_model_quantized.onnx")
 PRUNED_MODEL_PATH = Path("models/nn_model_pruned.pth")
 RESULTS_PATH = Path("models/optimization_results.json")
 
-# Добавляем безопасные глобалы для загрузки модели
+#      
 
 torch.serialization.add_safe_globals([numpy._core.multiarray.scalar])
 
 
 class QuantizedCreditScoringNN(nn.Module):
-    """Квантованная нейронная сеть"""
+    """  """
 
     def __init__(self, original_model: nn.Module):
         super(QuantizedCreditScoringNN, self).__init__()
@@ -31,7 +31,7 @@ class QuantizedCreditScoringNN(nn.Module):
 
 
 def load_model_safely(model_path: Path) -> Tuple[nn.Module, Dict]:
-    """Безопасная загрузка PyTorch модели"""
+    """  PyTorch """
     print(f"Loading model from {model_path}...")
 
     try:
@@ -43,7 +43,7 @@ def load_model_safely(model_path: Path) -> Tuple[nn.Module, Dict]:
         print(f"First attempt failed: {e}")
 
         try:
-            # Временная загрузка для получения input_size
+            #     input_size
             temp_data = torch.load(model_path, map_location="cpu", weights_only=False)
             if isinstance(temp_data, dict):
                 input_size = temp_data.get("input_size", 32)
@@ -53,12 +53,12 @@ def load_model_safely(model_path: Path) -> Tuple[nn.Module, Dict]:
                 state_dict = {}
 
             checkpoint = {"model_state_dict": state_dict, "input_size": input_size}
-            print("✓ Model partially loaded")
+            print(" Model partially loaded")
         except Exception as e2:
             print(f"All loading methods failed: {e2}")
             raise
 
-    # Создаем модель
+    #  
     from src.models.nn_model import CreditScoringNN
 
     input_size = checkpoint.get("input_size", 32)
@@ -73,24 +73,24 @@ def load_model_safely(model_path: Path) -> Tuple[nn.Module, Dict]:
 
 
 def apply_pruning(model: nn.Module, pruning_amount: float = 0.3) -> nn.Module:
-    """Применение прунинга (обрезания) к модели"""
+    """  ()  """
     print(f"\nApplying pruning ({pruning_amount * 100}%)...")
 
-    # Копируем модель
+    #  
     pruned_model = QuantizedCreditScoringNN(model)
 
-    # Применяем прунинг к линейным слоям
+    #     
     layers_pruned = 0
     for name, module in pruned_model.network.named_modules():
         if isinstance(module, nn.Linear):
             # L1 unstructured pruning
             prune.l1_unstructured(module, name="weight", amount=pruning_amount)
 
-            # Делаем прунинг постоянным
+            #   
             prune.remove(module, "weight")
             layers_pruned += 1
 
-    # Считаем оставшиеся параметры
+    #   
     total_params = sum(p.numel() for p in pruned_model.parameters())
     zero_params = sum((p == 0).sum().item() for p in pruned_model.parameters())
     sparsity = zero_params / total_params if total_params > 0 else 0
@@ -105,12 +105,12 @@ def apply_pruning(model: nn.Module, pruning_amount: float = 0.3) -> nn.Module:
 
 
 def apply_dynamic_quantization(model: nn.Module) -> nn.Module:
-    """Применение динамического квантования к модели"""
+    """    """
     print("\nApplying dynamic quantization...")
 
-    # Квантуем только линейные слои
+    #    
     quantized_model = torch.ao.quantization.quantize_dynamic(
-        model, {nn.Linear}, dtype=torch.qint8  # Квантуем только Linear слои
+        model, {nn.Linear}, dtype=torch.qint8  #   Linear 
     )
 
     print("Dynamic quantization applied")
@@ -118,13 +118,13 @@ def apply_dynamic_quantization(model: nn.Module) -> nn.Module:
 
 
 def quantize_onnx_model(onnx_path: Path, quantized_path: Path):
-    """Квантование ONNX модели"""
+    """ ONNX """
     print("\nQuantizing ONNX model...")
 
     try:
         import onnxruntime.quantization as ort_quantization
 
-        # Динамическое квантование (проще и не требует калибровочных данных)
+        #   (     )
         ort_quantization.quantize_dynamic(
             model_input=onnx_path,
             model_output=quantized_path,
@@ -143,7 +143,7 @@ def quantize_onnx_model(onnx_path: Path, quantized_path: Path):
 
 
 def measure_model_size(model_path: Path) -> float:
-    """Измерение размера модели в MB"""
+    """    MB"""
     if not model_path.exists():
         return 0.0
 
@@ -154,7 +154,7 @@ def measure_model_size(model_path: Path) -> float:
 def measure_inference_speed(
     model, test_data: torch.Tensor, n_iterations: int = 100
 ) -> float:
-    """Измерение скорости инференса"""
+    """  """
     model.eval()
 
     # Warmup
@@ -162,7 +162,7 @@ def measure_inference_speed(
         for _ in range(10):
             _ = model(test_data[:1])
 
-    # Измерение времени
+    #  
     start_time = time.time()
 
     with torch.no_grad():
@@ -170,7 +170,7 @@ def measure_inference_speed(
             _ = model(test_data[:1])
 
     total_time = time.time() - start_time
-    time_per_inference = total_time / n_iterations * 1000  # в миллисекундах
+    time_per_inference = total_time / n_iterations * 1000  #  
 
     return round(time_per_inference, 3)
 
@@ -181,23 +181,23 @@ def compare_model_metrics(
     test_data: torch.Tensor,
     test_targets: torch.Tensor,
 ) -> Dict:
-    """Сравнение метрик до и после оптимизации"""
+    """     """
 
     from sklearn.metrics import roc_auc_score, accuracy_score
 
-    # Предсказания оригинальной модели
+    #   
     original_model.eval()
     with torch.no_grad():
         original_probs = original_model(test_data).numpy().flatten()
         original_preds = (original_probs >= 0.5).astype(int)
 
-    # Предсказания оптимизированной модели
+    #   
     optimized_model.eval()
     with torch.no_grad():
         optimized_probs = optimized_model(test_data).numpy().flatten()
         optimized_preds = (optimized_probs >= 0.5).astype(int)
 
-    # Расчет метрик
+    #  
     target_np = test_targets.numpy().flatten()
 
     try:
@@ -222,7 +222,7 @@ def compare_model_metrics(
         },
     }
 
-    # Расчет изменений
+    #  
     metrics["improvement"] = {
         "auc_change": round(
             metrics["optimized"]["auc"] - metrics["original"]["auc"], 4
@@ -250,7 +250,7 @@ def compare_model_metrics(
 
 
 def visualize_comparison(metrics: Dict):
-    """Визуализация сравнения метрик"""
+    """  """
     try:
         import matplotlib.pyplot as plt
 
@@ -297,7 +297,7 @@ def visualize_comparison(metrics: Dict):
         ax.legend()
         ax.grid(True, alpha=0.3)
 
-        # Добавляем значения на столбцы
+        #    
         for i, (orig, opt) in enumerate(zip(original_values, optimized_values)):
             ax.text(i - width / 2, orig + 0.01, f"{orig:.3f}", ha="center")
             ax.text(i + width / 2, opt + 0.01, f"{opt:.3f}", ha="center")
@@ -313,12 +313,12 @@ def visualize_comparison(metrics: Dict):
 
 
 def run_optimization_pipeline():
-    """Полный пайплайн оптимизации"""
+    """  """
     print("=" * 60)
     print("MODEL OPTIMIZATION PIPELINE")
     print("=" * 60)
 
-    # Загрузка модели и данных
+    #    
     print("\n1. Loading model and data...")
 
     try:
@@ -328,7 +328,7 @@ def run_optimization_pipeline():
         print(f"Failed to load model: {e}")
         return None
 
-    # Загрузка данных
+    #  
     try:
         from src.models.train import load_data
         import joblib
@@ -336,10 +336,10 @@ def run_optimization_pipeline():
         X, y = load_data()
         print(f"Data loaded: {X.shape[0]} samples")
 
-        # Загрузка скейлера
+        #  
         scaler = joblib.load(Path("models/nn_scaler.joblib"))
 
-        # Подготовка тестовых данных
+        #   
         from sklearn.model_selection import train_test_split
 
         X_train, X_test, y_train, y_test = train_test_split(
@@ -347,24 +347,24 @@ def run_optimization_pipeline():
         )
 
         X_test_scaled = scaler.transform(X_test)
-        test_data = torch.FloatTensor(X_test_scaled[:100])  # 100 samples для теста
+        test_data = torch.FloatTensor(X_test_scaled[:100])  # 100 samples  
         test_targets = torch.FloatTensor(y_test.values[:100]).reshape(-1, 1)
 
         print(f"Test data prepared: {len(test_data)} samples")
 
     except Exception as e:
         print(f"Could not load test data: {e}")
-        # Используем случайные данные для теста
+        #     
         input_size = checkpoint.get("input_size", 32)
         test_data = torch.randn(50, input_size)
         test_targets = torch.randint(0, 2, (50, 1)).float()
         print(f"Using random test data")
 
-    # Применение прунинга
+    #  
     print("\n2. Applying pruning...")
     pruned_model = apply_pruning(original_model, pruning_amount=0.3)
 
-    # Сохранение прунированной модели
+    #   
     try:
         torch.save(
             {
@@ -379,11 +379,11 @@ def run_optimization_pipeline():
     except Exception as e:
         print(f"Could not save pruned model: {e}")
 
-    # Применение квантования
+    #  
     print("\n3. Applying quantization...")
     quantized_model = apply_dynamic_quantization(pruned_model)
 
-    # Сравнение метрик
+    #  
     print("\n4. Comparing metrics...")
     try:
         metrics = compare_model_metrics(
@@ -414,7 +414,7 @@ def run_optimization_pipeline():
             },
         }
 
-    # Квантование ONNX модели
+    #  ONNX 
     print("\n5. Quantizing ONNX model...")
     if ONNX_PATH.exists():
         quantized_onnx = quantize_onnx_model(ONNX_PATH, QUANTIZED_ONNX_PATH)
@@ -463,13 +463,13 @@ def run_optimization_pipeline():
     print(f"\nPerformance Metrics:")
     print(
         f"   AUC: {
-            metrics['original']['auc']:.4f} → {
+            metrics['original']['auc']:.4f}  {
             metrics['optimized']['auc']:.4f} "
         f"(: {impr['auc_change']:+.4f})"
     )
     print(
         f"   Accuracy: {
-            metrics['original']['accuracy']:.4f} → {
+            metrics['original']['accuracy']:.4f}  {
             metrics['optimized']['accuracy']:.4f} "
         f"(: {impr['accuracy_change']:+.4f})"
     )
@@ -477,14 +477,14 @@ def run_optimization_pipeline():
     print(f"\nSpeed Metrics:")
     print(
         f"   Inference Time: {
-            metrics['original']['inference_time_ms']:.2f}ms → "
+            metrics['original']['inference_time_ms']:.2f}ms  "
         f"{metrics['optimized']['inference_time_ms']:.2f}ms"
     )
     print(f"   Speedup: {impr['speedup']:.2f}x")
 
     print(f"\nSize Metrics:")
     print(
-        f"   Model Size: {metrics['original']['model_size_mb']:.2f}MB → "
+        f"   Model Size: {metrics['original']['model_size_mb']:.2f}MB  "
         f"{metrics['optimized']['model_size_mb']:.2f}MB"
     )
     print(f"   Size Reduction: {impr['size_reduction']:.1f}%")

@@ -17,7 +17,7 @@ echo -e "Registry: ${REGISTRY}"
 echo -e "Tag: ${TAG}"
 echo -e "Environment: ${ENVIRONMENT}"
 
-# Функция для сборки и пуша образа
+#      
 build_and_push() {
     local service=$1
     local context=$2
@@ -25,31 +25,31 @@ build_and_push() {
     
     echo -e "\n${YELLOW}Building ${service}...${NC}"
     
-    # Сборка образа
+    #  
     docker build \
         -t "${REGISTRY}/${service}:${TAG}" \
         -t "${REGISTRY}/${service}:${ENVIRONMENT}" \
         -f "${dockerfile}" \
         "${context}"
     
-    # Проверка размера образа
+    #   
     echo -e "Image size:"
     docker images "${REGISTRY}/${service}:${TAG}" --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"
     
-    # Push образа
+    # Push 
     echo -e "${YELLOW}Pushing ${service}...${NC}"
     docker push "${REGISTRY}/${service}:${TAG}"
     docker push "${REGISTRY}/${service}:${ENVIRONMENT}"
     
-    echo -e "${GREEN}✓ ${service} built and pushed successfully${NC}"
+    echo -e "${GREEN} ${service} built and pushed successfully${NC}"
 }
 
-# Сборка всех сервисов
+#   
 build_and_push "credit-scoring-api" "docker/api" "docker/api/Dockerfile"
 build_and_push "credit-scoring-frontend" "docker/frontend" "docker/frontend/Dockerfile"
 build_and_push "credit-scoring-data-loader" "docker/data-loader" "docker/data-loader/Dockerfile"
 
-# Trivy сканирование на уязвимости
+# Trivy   
 echo -e "\n${YELLOW}Scanning for vulnerabilities...${NC}"
 for service in credit-scoring-api credit-scoring-frontend credit-scoring-data-loader; do
     echo -e "Scanning ${service}..."
@@ -60,7 +60,7 @@ for service in credit-scoring-api credit-scoring-frontend credit-scoring-data-lo
         "${REGISTRY}/${service}:${TAG}"
 done
 
-# Создание отчета SBOM
+#   SBOM
 echo -e "\n${YELLOW}Generating SBOM reports...${NC}"
 for service in credit-scoring-api credit-scoring-frontend credit-scoring-data-loader; do
     docker run --rm \

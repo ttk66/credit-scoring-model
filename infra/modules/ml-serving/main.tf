@@ -1,4 +1,4 @@
-# Namespace для ML приложений
+# Namespace  ML 
 resource "kubernetes_namespace_v1" "ml_serving" {
   metadata {
     name = "ml-serving"
@@ -8,7 +8,7 @@ resource "kubernetes_namespace_v1" "ml_serving" {
   }
 }
 
-# ConfigMap с конфигурацией модели
+# ConfigMap   
 resource "kubernetes_config_map_v1" "model_config" {
   metadata {
     name      = "model-config"
@@ -43,7 +43,7 @@ resource "kubernetes_config_map_v1" "model_config" {
   }
 }
 
-# Secret с ключами доступа к storage
+# Secret     storage
 resource "kubernetes_secret_v1" "storage_credentials" {
   metadata {
     name      = "storage-credentials"
@@ -58,7 +58,7 @@ resource "kubernetes_secret_v1" "storage_credentials" {
   type = "Opaque"
 }
 
-# Deployment для ML serving
+# Deployment  ML serving
 resource "kubernetes_deployment_v1" "ml_api" {
   metadata {
     name      = "credit-scoring-api"
@@ -252,7 +252,7 @@ resource "kubernetes_deployment_v1" "ml_api" {
   }
 }
 
-# Service для доступа к API
+# Service    API
 resource "kubernetes_service_v1" "ml_api" {
   metadata {
     name      = "credit-scoring-api"
@@ -280,7 +280,7 @@ resource "kubernetes_service_v1" "ml_api" {
   }
 }
 
-# Ingress для внешнего доступа
+# Ingress   
 resource "kubernetes_ingress_v1" "ml_api" {
   metadata {
     name      = "credit-scoring-ingress"
@@ -359,7 +359,7 @@ resource "kubernetes_horizontal_pod_autoscaler_v2" "ml_api" {
   }
 }
 
-# Service Account для ML serving
+# Service Account  ML serving
 resource "kubernetes_service_account_v1" "ml_serving" {
   metadata {
     name      = "ml-serving-sa"

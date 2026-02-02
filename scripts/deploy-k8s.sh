@@ -30,7 +30,7 @@ for deployment in kubernetes/deployments/*.yaml; do
     echo "Deploying $(basename $deployment)"
     kubectl apply -f ${deployment} -n ${NAMESPACE}
     
-    # Проверка статуса rollout
+    #   rollout
     DEPLOYMENT_NAME=$(yq eval '.metadata.name' ${deployment})
     kubectl rollout status deployment/${DEPLOYMENT_NAME} -n ${NAMESPACE} --timeout=300s
 done
@@ -47,7 +47,7 @@ kubectl apply -f kubernetes/ingress/ -n ${NAMESPACE}
 echo "Applying Autoscaling..."
 kubectl apply -f kubernetes/autoscaling/ -n ${NAMESPACE}
 
-# Проверка состояния
+#  
 echo "Checking deployment status..."
 kubectl get all -n ${NAMESPACE}
 kubectl get ingress -n ${NAMESPACE}

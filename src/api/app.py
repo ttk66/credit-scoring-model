@@ -104,7 +104,7 @@ class FeedbackPayload(BaseModel):
 
 
 def build_features_api(df: pd.DataFrame) -> pd.DataFrame:
-    """Адаптированная версия build_features для API"""
+    """  build_features  API"""
     df = df.copy()
 
     mask = df["limit_bal"] > 0
@@ -129,7 +129,7 @@ def build_features_api(df: pd.DataFrame) -> pd.DataFrame:
     df["bill_pay_ratio"] = df["bill_pay_ratio"].fillna(0)
     df["bill_pay_ratio"] = df["bill_pay_ratio"].clip(lower=0, upper=5)
 
-    # Добавляем pay_1 если его нет
+    #  pay_1   
     if "pay_1" not in df.columns:
         df["pay_1"] = 0
 
@@ -141,7 +141,7 @@ def build_features_api(df: pd.DataFrame) -> pd.DataFrame:
     df["avg_delay"] = df_positive.mean(axis=1)
     df["avg_delay"] = df["avg_delay"].fillna(0)
 
-    # Тренд счетов
+    #  
     def _slope(row):
         y = row.values.astype(float)
         finite_mask = np.isfinite(y)
@@ -157,14 +157,14 @@ def build_features_api(df: pd.DataFrame) -> pd.DataFrame:
     df["bill_trend"] = df[bill_cols].apply(_slope, axis=1)
     df["bill_trend"] = df["bill_trend"].fillna(0)
 
-    # Биннинг возраста
+    #  
     bins = [0, 30, 40, 50, 60, 100]
     labels = [0, 1, 2, 3, 4]
 
     df["age_bin"] = pd.cut(df["age"], bins=bins, labels=labels, include_lowest=True)
     df["age_bin"] = df["age_bin"].cat.add_categories([-1]).fillna(-1)
 
-    # Категориальные фичи
+    #  
     for c in ["sex", "education", "marriage", "age_bin"]:
         df[c] = df[c].astype("category")
 
@@ -415,7 +415,7 @@ def predict(features: RawFeatures):
 
 @app.get("/model_info")
 def get_model_info():
-    """Информация о модели"""
+    """  """
     return {
         "model_type": getattr(app.state, "model_type", "unknown"),
         "pipeline_steps": (

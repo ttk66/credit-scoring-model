@@ -1,6 +1,6 @@
 """
-Health Check Endpoints для Credit Scoring API
-Интегрируйте эти endpoints в src/api/app.py (или src/api/main.py)
+Health Check Endpoints  Credit Scoring API
+  endpoints  src/api/app.py ( src/api/main.py)
 """
 
 from fastapi import APIRouter, HTTPException
@@ -39,8 +39,8 @@ async def health_check():
 @router.get("/ready")
 async def readiness_check():
     """
-    Readiness probe - проверяет готовность к обслуживанию запросов
-    Проверяет подключение к базе данных и Redis
+    Readiness probe -     
+          Redis
     """
     checks = {
         "database": False,
@@ -50,7 +50,7 @@ async def readiness_check():
     
     # Check database connection
     try:
-        # Используйте вашу БД конфигурацию
+        #    
         conn = psycopg2.connect(
             host=os.getenv("DB_HOST", "postgresql"),
             port=os.getenv("DB_PORT", "5432"),
@@ -76,7 +76,7 @@ async def readiness_check():
     
     # Check model availability
     try:
-        # Проверить наличие модели в памяти/на диске
+        #     / 
         if hasattr(app.state, 'model') and app.state.model is not None:
             checks["model"] = True
         else:
@@ -101,8 +101,8 @@ async def readiness_check():
 @router.get("/startup")
 async def startup_check():
     """
-    Startup probe - проверяет успешность инициализации приложения
-    Используется для определения момента, когда приложение готово начать работу
+    Startup probe -    
+       ,     
     """
     checks = {
         "initialization": False,
@@ -147,8 +147,8 @@ async def startup_check():
 @router.get("/live")
 async def liveness_check():
     """
-    Liveness probe - проверяет живость приложения
-    Если endpoint не ответит, pod будет перезагружен
+    Liveness probe -   
+     endpoint  , pod  
     """
     return {
         "status": "alive",
@@ -157,7 +157,7 @@ async def liveness_check():
     }
 
 
-# ПРИМЕР ИНТЕГРАЦИИ В MAIN APP:
+#    MAIN APP:
 """
 from fastapi import FastAPI
 import time
@@ -169,7 +169,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Инициализация состояния приложения
+#   
 app.state.start_time = time.time()
 app.state.initialized = False
 app.state.model = None
@@ -178,14 +178,14 @@ app.state.config = None
 
 @app.on_event("startup")
 async def startup_event():
-    # Инициализация моделей и конфигурации
+    #    
     logger.info("Starting up...")
     
     try:
-        # Загрузка модели
+        #  
         app.state.model = load_model("/models/credit_scoring.onnx")
         
-        # Загрузка конфигурации
+        #  
         app.state.config = load_config("/app/config/app-config.yaml")
         
         app.state.initialized = True
@@ -201,16 +201,16 @@ async def shutdown_event():
     # Cleanup
 
 
-# Регистрация health endpoints
+#  health endpoints
 app.include_router(router)
 
-# Другие endpoints
+#  endpoints
 @app.post("/predict")
 async def predict(features: dict):
     if not app.state.initialized or app.state.model is None:
         raise HTTPException(status_code=503, detail="Service not ready")
     
-    # Реализация предсказания
+    #  
     ...
 
 

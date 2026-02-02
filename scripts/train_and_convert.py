@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Скрипт для обучения нейронной сети и конвертации в ONNX
+        ONNX
 """
 from src.models.convert_to_onnx import run_complete_pipeline
 from src.models.nn_model import main as train_nn
@@ -37,7 +37,7 @@ def main():
         print(f"\nNeural network training completed")
         print(f"Test AUC: {test_auc:.4f}")
 
-    # Конвертация в ONNX
+    #   ONNX
     if not args.train_only:
         print("\nCONVERTING TO ONNX")
         print("-" * 40)

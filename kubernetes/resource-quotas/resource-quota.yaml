@@ -1,6 +1,6 @@
-# Resource Quota для namespace ml-serving
-# Ограничивает общее потребление ресурсов в namespace
-# Защищает от ошибок в приложении или DDoS атак
+# Resource Quota  namespace ml-serving
+#      namespace
+#       DDoS 
 
 ---
 apiVersion: v1
@@ -9,44 +9,44 @@ metadata:
   name: ml-serving-quota
   namespace: ml-serving
 spec:
-  # Ограничение на CPU и Memory requests
+  #   CPU  Memory requests
   hard:
     requests.cpu: "20"          # 20 CPU cores
     requests.memory: "40Gi"     # 40 GB RAM
-    limits.cpu: "40"            # 40 CPU cores (лимиты)
-    limits.memory: "80Gi"       # 80 GB RAM (лимиты)
+    limits.cpu: "40"            # 40 CPU cores ()
+    limits.memory: "80Gi"       # 80 GB RAM ()
     
-    # Количество pods
+    #  pods
     pods: "100"
     
-    # Количество PVC
+    #  PVC
     persistentvolumeclaims: "10"
     
-    # Количество сервисов
+    #  
     services: "10"
     
-    # Количество configmaps
+    #  configmaps
     configmaps: "50"
     
-    # Количество secrets
+    #  secrets
     secrets: "50"
     
-    # GPU (если используется)
+    # GPU ( )
     "limits.nvidia.com/gpu": "4"
     
-    # Requests для GPU
+    # Requests  GPU
     "requests.nvidia.com/gpu": "2"
   
-  # Scope (по умолчанию применяется ко всем pods)
+  # Scope (     pods)
   scopeSelector:
     matchExpressions:
-    # Не применяется к pods с BestEffort QoS
+    #    pods  BestEffort QoS
     - operator: NotIn
       scopeName: Terminating
       values: ["active"]
 
 ---
-# Resource Quota для Compute в ml-serving
+# Resource Quota  Compute  ml-serving
 apiVersion: v1
 kind: ResourceQuota
 metadata:
@@ -62,7 +62,7 @@ spec:
     requests.memory: "32Gi"
     limits.memory: "64Gi"
   
-  # Применяется только к pods с Guaranteed QoS class
+  #    pods  Guaranteed QoS class
   scopeSelector:
     matchExpressions:
     - operator: In
@@ -70,7 +70,7 @@ spec:
       values: ["production"]
 
 ---
-# Network Policy Quota (ограничение на сетевые ресурсы)
+# Network Policy Quota (   )
 apiVersion: v1
 kind: ResourceQuota
 metadata:
@@ -78,18 +78,18 @@ metadata:
   namespace: ml-serving
 spec:
   hard:
-    # Сервисы типа LoadBalancer
+    #   LoadBalancer
     "services.loadbalancers": "2"
     
-    # Services типа NodePort
+    # Services  NodePort
     "services.nodeports": "2"
     
     # Ingress
     "ingresses.networking.k8s.io": "5"
 
 ---
-# Default Resource Quota для namespace ml-serving
-# Задает лимиты для pods без явно указанных requests/limits
+# Default Resource Quota  namespace ml-serving
+#    pods    requests/limits
 apiVersion: v1
 kind: LimitRange
 metadata:
@@ -97,26 +97,26 @@ metadata:
   namespace: ml-serving
 spec:
   limits:
-  # Для контейнеров
+  #  
   - type: Container
     default:
-      # Default limits (если не указаны)
+      # Default limits (  )
       memory: "512Mi"
       cpu: "500m"
     defaultRequest:
-      # Default requests (если не указаны)
+      # Default requests (  )
       memory: "256Mi"
       cpu: "250m"
     min:
-      # Минимальные значения
+      #  
       memory: "64Mi"
       cpu: "10m"
     max:
-      # Максимальные значения
+      #  
       memory: "2Gi"
       cpu: "2"
   
-  # Для pods
+  #  pods
   - type: Pod
     min:
       memory: "64Mi"
@@ -125,7 +125,7 @@ spec:
       memory: "4Gi"
       cpu: "4"
   
-  # Для PVC
+  #  PVC
   - type: PersistentVolumeClaim
     min:
       storage: "1Gi"
@@ -133,23 +133,23 @@ spec:
       storage: "100Gi"
 
 ---
-# Network Policy Quota для сетевого трафика
+# Network Policy Quota   
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: ml-serving-network-limit
   namespace: ml-serving
 spec:
-  # Применяется ко всем pods в namespace
+  #    pods  namespace
   podSelector: {}
   
   policyTypes:
   - Ingress
   - Egress
   
-  # Входящий трафик
+  #  
   ingress:
-  # От ingress controller
+  #  ingress controller
   - from:
     - namespaceSelector:
         matchLabels:
@@ -160,7 +160,7 @@ spec:
     - protocol: TCP
       port: 9090
   
-  # Исходящий трафик
+  #  
   egress:
   # DNS
   - to:
@@ -171,11 +171,11 @@ spec:
     - protocol: UDP
       port: 53
   
-  # Другие сервисы в namespace
+  #    namespace
   - to:
     - podSelector: {}
   
-  # Интернет (HTTPS и HTTP)
+  #  (HTTPS  HTTP)
   - to:
     - namespaceSelector: {}
     ports:

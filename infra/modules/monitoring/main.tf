@@ -4,7 +4,7 @@ resource "yandex_iam_service_account" "monitoring" {
   description = "Service account for monitoring"
 }
 
-# Роли для monitoring service account
+#   monitoring service account
 resource "yandex_resourcemanager_folder_iam_member" "monitoring_roles" {
   for_each = toset([
     "monitoring.editor",
@@ -18,7 +18,7 @@ resource "yandex_resourcemanager_folder_iam_member" "monitoring_roles" {
   member    = "serviceAccount:${yandex_iam_service_account.monitoring.id}"
 }
 
-# Дашборд в Monitoring
+#   Monitoring
 resource "yandex_monitoring_dashboard" "credit_scoring" {
   name        = "${var.name_prefix}-dashboard"
   description = "Credit Scoring ML Dashboard"
@@ -184,7 +184,7 @@ resource "yandex_monitoring_dashboard" "credit_scoring" {
   tags = var.tags
 }
 
-# Алёрты
+# 
 resource "yandex_monitoring_alert" "high_error_rate" {
   name        = "${var.name_prefix}-high-error-rate"
   description = "High error rate in credit scoring API"
@@ -296,7 +296,7 @@ resource "yandex_monitoring_alert" "low_success_rate" {
   }
 }
 
-# Каналы уведомлений
+#  
 resource "yandex_monitoring_notification_channel" "email" {
   name        = "${var.name_prefix}-email-notifications"
   description = "Email notifications for ML team"
@@ -321,7 +321,7 @@ resource "yandex_monitoring_notification_channel" "telegram" {
   }
 }
 
-# Логирование (Cloud Logging)
+#  (Cloud Logging)
 resource "yandex_logging_group" "ml_logs" {
   name        = "${var.name_prefix}-ml-logs"
   description = "Log group for credit scoring ML service"

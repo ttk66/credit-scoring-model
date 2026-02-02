@@ -32,5 +32,5 @@ spec:
   storageClassName: yc-network-hdd
   csi:
     driver: disk.csi.yandex.net
-    volumeHandle: epd1l7p2j0kmk2iq5v4k # Идентификатор диска в Yandex Cloud
+    volumeHandle: epd1l7p2j0kmk2iq5v4k #    Yandex Cloud
     fsType: ext4

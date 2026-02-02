@@ -66,7 +66,7 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
         if c in df.columns:
             df[c] = df[c].astype("category")
 
-    print("Фичи успешно добавлены:", df.shape)
+    print("  :", df.shape)
     return df
 
 

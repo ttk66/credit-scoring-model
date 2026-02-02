@@ -15,18 +15,18 @@ for deployment in ${DEPLOYMENTS}; do
         echo "${deployment} is ready"
     else
         echo "${deployment} rollout failed"
-        # Показать детали ошибки
+        #   
         kubectl describe deployment/${deployment} -n ${NAMESPACE}
         kubectl get pods -n ${NAMESPACE} -l app=${deployment}
         exit 1
     fi
 done
 
-# Проверить readiness всех подов
+#  readiness  
 echo "Checking pod readiness..."
 kubectl get pods -n ${NAMESPACE} -o wide
 
-# Проверить доступность сервисов
+#   
 echo "Checking service endpoints..."
 kubectl get endpoints -n ${NAMESPACE}
 

@@ -52,7 +52,7 @@ metadata:
 spec:
   selector:
     app: postgresql
-  clusterIP: None  # Headless service для StatefulSet
+  clusterIP: None  # Headless service  StatefulSet
   ports:
   - name: postgresql
     port: 5432
@@ -73,7 +73,7 @@ metadata:
 spec:
   selector:
     app: redis
-  clusterIP: None  # Headless service для StatefulSet
+  clusterIP: None  # Headless service  StatefulSet
   ports:
   - name: redis
     port: 6379
@@ -82,7 +82,7 @@ spec:
   type: ClusterIP
 
 ---
-# Celery Worker Service (для Flower мониторинга)
+# Celery Worker Service ( Flower )
 apiVersion: v1
 kind: Service
 metadata:

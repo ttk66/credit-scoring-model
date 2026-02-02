@@ -23,7 +23,7 @@ echo ""
 echo "1. Deploying Prometheus..."
 kubectl apply -f $MONITORING_DIR/prometheus-config.yaml
 kubectl apply -f $MONITORING_DIR/prometheus-deployment.yaml
-echo "✓ Prometheus deployed"
+echo " Prometheus deployed"
 
 # Wait for Prometheus to be ready
 echo "Waiting for Prometheus to be ready..."
@@ -34,7 +34,7 @@ echo ""
 echo "2. Deploying Grafana..."
 kubectl apply -f $MONITORING_DIR/grafana-config.yaml
 kubectl apply -f $MONITORING_DIR/grafana-deployment.yaml
-echo "✓ Grafana deployed"
+echo " Grafana deployed"
 
 # Wait for Grafana to be ready
 echo "Waiting for Grafana to be ready..."
@@ -44,7 +44,7 @@ kubectl rollout status deployment/grafana -n $NAMESPACE --timeout=120s
 echo ""
 echo "3. Deploying Loki Logging Stack..."
 kubectl apply -f $MONITORING_DIR/loki-logging.yaml
-echo "✓ Loki and Promtail deployed"
+echo " Loki and Promtail deployed"
 
 # Wait for Loki to be ready
 echo "Waiting for Loki to be ready..."
@@ -58,7 +58,7 @@ kubectl get pods -n $NAMESPACE | grep -E "prometheus|grafana|loki|promtail"
 # Port forwarding info
 echo ""
 echo "=========================================="
-echo "✅ Monitoring stack deployed successfully!"
+echo " Monitoring stack deployed successfully!"
 echo "=========================================="
 echo ""
 echo "Access the monitoring tools:"

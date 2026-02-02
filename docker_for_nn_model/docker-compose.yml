@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # PostgreSQL для хранения данных
+  # PostgreSQL   
   postgres:
     image: postgres:15-alpine
     container_name: credit_scoring_db
@@ -22,7 +22,7 @@ services:
     networks:
       - ml-network
 
-  # Redis для кэширования и Celery
+  # Redis    Celery
   redis:
     image: redis:7-alpine
     container_name: credit_scoring_redis
@@ -39,7 +39,7 @@ services:
     networks:
       - ml-network
 
-  # ML API сервис
+  # ML API 
   api:
     build:
       context: ../api
@@ -70,7 +70,7 @@ services:
     networks:
       - ml-network
 
-  # Celery worker для обработки данных
+  # Celery worker   
   celery-worker:
     build:
       context: ../api
@@ -91,7 +91,7 @@ services:
     networks:
       - ml-network
 
-  # Data loader с DVC
+  # Data loader  DVC
   data-loader:
     build:
       context: ../data-loader

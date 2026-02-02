@@ -1,37 +1,37 @@
 #!/bin/bash
 
-# Deployment Guide - Полный рабочий процесс развертывания
-# Credit Scoring Model на Kubernetes в Yandex Cloud
+# Deployment Guide -    
+# Credit Scoring Model  Kubernetes  Yandex Cloud
 
 set -e
 
 # ============================================
-# ФАЗА 1: ПОДГОТОВКА
+#  1: 
 # ============================================
 
-echo "=== ФАЗА 1: ПОДГОТОВКА ==="
+echo "===  1:  ==="
 
-# 1. Установить зависимости
+# 1.  
 check_dependencies() {
-    echo "Проверка зависимостей..."
+    echo " ..."
     
-    command -v kubectl >/dev/null 2>&1 || { echo "kubectl не найден"; exit 1; }
-    command -v yc >/dev/null 2>&1 || { echo "Yandex CLI не найден"; exit 1; }
-    command -v docker >/dev/null 2>&1 || { echo "docker не найден"; exit 1; }
-    command -v helm >/dev/null 2>&1 || { echo "helm не найден"; exit 1; }
-    command -v kubeseal >/dev/null 2>&1 || { echo "kubeseal не найден (опционально)"; }
+    command -v kubectl >/dev/null 2>&1 || { echo "kubectl  "; exit 1; }
+    command -v yc >/dev/null 2>&1 || { echo "Yandex CLI  "; exit 1; }
+    command -v docker >/dev/null 2>&1 || { echo "docker  "; exit 1; }
+    command -v helm >/dev/null 2>&1 || { echo "helm  "; exit 1; }
+    command -v kubeseal >/dev/null 2>&1 || { echo "kubeseal   ()"; }
     
-    echo "✅ Все зависимости установлены"
+    echo "   "
 }
 
-# 2. Настроить Yandex Cloud
+# 2.  Yandex Cloud
 setup_yandex_cloud() {
-    echo "Настройка Yandex Cloud..."
+    echo " Yandex Cloud..."
     
-    # Инициализировать Yandex CLI
+    #  Yandex CLI
     yc init --skip-tutorial
     
-    # Установить default folder и cloud
+    #  default folder  cloud
     FOLDER_ID=$(yc config get folder-id)
     CLOUD_ID=$(yc config get cloud-id)
     
@@ -39,9 +39,9 @@ setup_yandex_cloud() {
     echo "Folder ID: $FOLDER_ID"
 }
 
-# 3. Создать/обновить kubeconfig
+# 3. / kubeconfig
 setup_kubeconfig() {
-    echo "Настройка kubeconfig..."
+    echo " kubeconfig..."
     
     CLUSTER_ID=$(yc managed-kubernetes cluster list --format json | jq -r '.[0].id')
     CLUSTER_NAME=$(yc managed-kubernetes cluster list --format json | jq -r '.[0].name')
@@ -58,63 +58,63 @@ setup_kubeconfig() {
 }
 
 # ============================================
-# ФАЗА 2: ПОДГОТОВКА DOCKER ОБРАЗОВ
+#  2:  DOCKER 
 # ============================================
 
 echo ""
-echo "=== ФАЗА 2: ПОДГОТОВКА DOCKER ОБРАЗОВ ==="
+echo "===  2:  DOCKER  ==="
 
 build_and_push_images() {
-    echo "Сборка и загрузка Docker образов..."
+    echo "   Docker ..."
     
     REGISTRY=$(yc container registry list --format json | jq -r '.[0].repository_name')
     echo "Registry: $REGISTRY"
     
-    # API сервис
-    echo "1. Сборка API образа..."
+    # API 
+    echo "1.  API ..."
     docker build -t $REGISTRY/credit-scoring-api:1.0.0 \
         docker_for_nn_model/api/
     docker push $REGISTRY/credit-scoring-api:1.0.0
     
     # Frontend
-    echo "2. Сборка Frontend образа..."
+    echo "2.  Frontend ..."
     docker build -t $REGISTRY/credit-scoring-frontend:1.0.0 \
         docker_for_nn_model/frontend/
     docker push $REGISTRY/credit-scoring-frontend:1.0.0
     
     # Data Loader
-    echo "3. Сборка Data Loader образа..."
+    echo "3.  Data Loader ..."
     docker build -t $REGISTRY/credit-scoring-data-loader:1.0.0 \
         docker_for_nn_model/data-loader/
     docker push $REGISTRY/credit-scoring-data-loader:1.0.0
     
     # Random Forest Backend
-    echo "4. Сборка Random Forest Backend образа..."
+    echo "4.  Random Forest Backend ..."
     docker build -t $REGISTRY/credit-scoring-rf-backend:1.0.0 \
         docker_for_random_forest/
     docker push $REGISTRY/credit-scoring-rf-backend:1.0.0
     
-    echo "✅ Все образы загружены в $REGISTRY"
+    echo "     $REGISTRY"
 }
 
 # ============================================
-# ФАЗА 3: НАСТРОЙКА KUBERNETES
+#  3:  KUBERNETES
 # ============================================
 
 echo ""
-echo "=== ФАЗА 3: НАСТРОЙКА KUBERNETES ==="
+echo "===  3:  KUBERNETES ==="
 
 setup_kubernetes() {
-    echo "Создание namespace и RBAC..."
+    echo " namespace  RBAC..."
     
-    # Создать namespace
+    #  namespace
     kubectl create namespace ml-serving || true
     kubectl label namespace ml-serving istio-injection=enabled || true
     
-    # Создать Service Account
+    #  Service Account
     kubectl create serviceaccount ml-serving-sa -n ml-serving || true
     
-    # Создать ClusterRole и ClusterRoleBinding
+    #  ClusterRole  ClusterRoleBinding
     kubectl apply -f kubernetes/rbac/cluster-role.yaml 2>/dev/null || \
     cat << 'EOF' | kubectl apply -f -
 apiVersion: rbac.authorization.k8s.io/v1
@@ -136,14 +136,14 @@ EOF
 }
 
 # ============================================
-# ФАЗА 4: СОЗДАНИЕ SECRETS И CONFIGMAPS
+#  4:  SECRETS  CONFIGMAPS
 # ============================================
 
 echo ""
-echo "=== ФАЗА 4: SECRETS И CONFIGMAPS ==="
+echo "===  4: SECRETS  CONFIGMAPS ==="
 
 setup_secrets() {
-    echo "Создание secrets и configmaps..."
+    echo " secrets  configmaps..."
     
     # Docker Registry Secret
     echo "1. Docker Registry Secret..."
@@ -157,7 +157,7 @@ setup_secrets() {
         --docker-email=system@example.com \
         -n ml-serving --dry-run=client -o yaml | kubectl apply -f -
     
-    # Привязать secret к service account
+    #  secret  service account
     kubectl patch serviceaccount ml-serving-sa \
         -p '{"imagePullSecrets": [{"name": "docker-registry-credentials"}]}' \
         -n ml-serving
@@ -184,81 +184,81 @@ setup_secrets() {
         --from-literal=endpoint=https://storage.yandexcloud.net \
         -n ml-serving --dry-run=client -o yaml | kubectl apply -f -
     
-    echo "✅ Secrets созданы"
+    echo " Secrets "
 }
 
 # ============================================
-# ФАЗА 5: РАЗВЕРТЫВАНИЕ КОМПОНЕНТОВ
+#  5:  
 # ============================================
 
 echo ""
-echo "=== ФАЗА 5: РАЗВЕРТЫВАНИЕ КОМПОНЕНТОВ ==="
+echo "===  5:   ==="
 
 deploy_components() {
-    echo "Развертывание компонентов..."
+    echo " ..."
     
-    # Применить ConfigMaps
+    #  ConfigMaps
     echo "1. ConfigMaps..."
     kubectl apply -f kubernetes/configs/all-configmaps.yaml
     
-    # Применить Storage (PVC)
+    #  Storage (PVC)
     echo "2. Persistent Storage..."
     kubectl apply -f kubernetes/storage/pvc-models.yaml
     
-    # Применить Database
+    #  Database
     echo "3. PostgreSQL..."
     kubectl apply -f kubernetes/deployments/postgresql-statefulset.yaml
     kubectl wait --for=condition=Ready pod/postgresql-0 -n ml-serving --timeout=300s
     
-    # Применить Redis
+    #  Redis
     echo "4. Redis..."
     kubectl apply -f kubernetes/deployments/redis-statefulset.yaml
     kubectl wait --for=condition=Ready pod/redis-0 -n ml-serving --timeout=300s
     
-    # Применить Services
+    #  Services
     echo "5. Services..."
     kubectl apply -f kubernetes/services/all-services.yaml
     
-    # Применить API
+    #  API
     echo "6. API..."
     kubectl apply -f kubernetes/deployments/api-deployment.yaml
     kubectl wait --for=condition=Ready pod -l app=credit-scoring-api -n ml-serving --timeout=300s
     
-    # Применить Frontend
+    #  Frontend
     echo "7. Frontend..."
     kubectl apply -f kubernetes/deployments/frontend-deployment.yaml
     kubectl wait --for=condition=Ready pod -l app=credit-scoring-frontend -n ml-serving --timeout=300s
     
-    # Применить Celery Worker
+    #  Celery Worker
     echo "8. Celery Worker..."
     kubectl apply -f kubernetes/deployments/celery-worker-deployment.yaml
     
-    # Применить Data Loader Job
+    #  Data Loader Job
     echo "9. Data Loader Job..."
     kubectl apply -f kubernetes/jobs/data-loader-job.yaml
     
-    # Применить Ingress
+    #  Ingress
     echo "10. Ingress..."
     kubectl apply -f kubernetes/ingress/ingress.yaml
     kubectl apply -f kubernetes/ingress/frontend-ingress.yaml
     
-    # Применить Network Policies
+    #  Network Policies
     echo "11. Network Policies..."
     kubectl apply -f kubernetes/network-policies/default-deny.yaml 2>/dev/null || true
     kubectl apply -f kubernetes/network-policies/*.yaml 2>/dev/null || true
     
-    echo "✅ Компоненты развернуты"
+    echo "  "
 }
 
 # ============================================
-# ФАЗА 6: ПРОВЕРКА РАЗВЕРТЫВАНИЯ
+#  6:  
 # ============================================
 
 echo ""
-echo "=== ФАЗА 6: ПРОВЕРКА РАЗВЕРТЫВАНИЯ ==="
+echo "===  6:   ==="
 
 verify_deployment() {
-    echo "Проверка статуса развертывания..."
+    echo "  ..."
     
     echo ""
     echo "Pods:"
@@ -280,31 +280,31 @@ verify_deployment() {
     echo "Events:"
     kubectl get events -n ml-serving --sort-by='.lastTimestamp' | tail -20
     
-    # Проверить логи
+    #  
     echo ""
-    echo "Логи API:"
+    echo " API:"
     kubectl logs -n ml-serving -l app=credit-scoring-api --tail=20 --timestamps=true 2>/dev/null || true
     
     echo ""
-    echo "✅ Проверка завершена"
+    echo "  "
 }
 
 # ============================================
-# ФАЗА 7: ТЕСТИРОВАНИЕ
+#  7: 
 # ============================================
 
 echo ""
-echo "=== ФАЗА 7: ТЕСТИРОВАНИЕ ==="
+echo "===  7:  ==="
 
 test_deployment() {
-    echo "Тестирование развертывания..."
+    echo " ..."
     
-    # Port forward к API
+    # Port forward  API
     kubectl port-forward svc/credit-scoring-api 8000:8000 -n ml-serving &
     FORWARD_PID=$!
     sleep 2
     
-    echo "1. Проверка Health endpoints..."
+    echo "1.  Health endpoints..."
     
     # Test /health
     curl -s http://localhost:8000/health | jq . || true
@@ -312,9 +312,9 @@ test_deployment() {
     # Test /ready
     READY=$(curl -s http://localhost:8000/ready | jq -r '.status')
     if [ "$READY" == "ready" ]; then
-        echo "✅ API ready"
+        echo " API ready"
     else
-        echo "⚠️  API not ready"
+        echo "  API not ready"
     fi
     
     # Test /startup
@@ -322,7 +322,7 @@ test_deployment() {
     
     # Test /predict
     echo ""
-    echo "2. Тест предсказания..."
+    echo "2.  ..."
     curl -X POST http://localhost:8000/predict \
         -H "Content-Type: application/json" \
         -d '{
@@ -330,79 +330,79 @@ test_deployment() {
             "model": "onnx"
         }' | jq . || true
     
-    # Очистить port forward
+    #  port forward
     kill $FORWARD_PID 2>/dev/null || true
     
     echo ""
-    echo "✅ Тестирование завершено"
+    echo "  "
 }
 
 # ============================================
-# ФАЗА 8: POST-DEPLOYMENT
+#  8: POST-DEPLOYMENT
 # ============================================
 
 echo ""
-echo "=== ФАЗА 8: POST-DEPLOYMENT ==="
+echo "===  8: POST-DEPLOYMENT ==="
 
 post_deployment() {
-    echo "Post-deployment настройка..."
+    echo "Post-deployment ..."
     
-    # Получить Ingress IP
-    echo "1. Ingress адреса:"
+    #  Ingress IP
+    echo "1. Ingress :"
     kubectl get ingress -n ml-serving -o wide
     
-    # Получить LoadBalancer IP
+    #  LoadBalancer IP
     echo ""
-    echo "2. LoadBalancer адреса:"
+    echo "2. LoadBalancer :"
     kubectl get svc credit-scoring-api-lb -n ml-serving -o wide
     
-    # Настроить DNS (если нужно)
+    #  DNS ( )
     echo ""
-    echo "3. DNS настройка (на ваше усмотрение):"
+    echo "3. DNS  (  ):"
     INGRESS_IP=$(kubectl get ingress -n ml-serving credit-scoring-ingress -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "PENDING")
     echo "   Ingress IP: $INGRESS_IP"
     echo "   Add to /etc/hosts or DNS:"
     echo "   $INGRESS_IP api.credit-scoring.example.com"
     echo "   $INGRESS_IP app.credit-scoring.example.com"
     
-    # Настроить мониторинг
+    #  
     echo ""
-    echo "4. Мониторинг (Prometheus + Grafana):"
+    echo "4.  (Prometheus + Grafana):"
     echo "   helm install prometheus prometheus-community/kube-prometheus-stack -n ml-serving"
     echo "   kubectl port-forward svc/prometheus-grafana 3000:80 -n ml-serving"
     
-    # Настроить логирование
+    #  
     echo ""
-    echo "5. Логирование (ELK Stack):"
+    echo "5.  (ELK Stack):"
     echo "   helm install elasticsearch elastic/elasticsearch -n ml-serving"
     echo "   helm install kibana elastic/kibana -n ml-serving"
     
-    # Backup sealing key (для SealedSecrets)
+    # Backup sealing key ( SealedSecrets)
     echo ""
-    echo "6. Backup Sealing Key (для Sealed Secrets):"
+    echo "6. Backup Sealing Key ( Sealed Secrets):"
     mkdir -p backups
     kubectl get secret -n kube-system sealed-secrets-key -o yaml > backups/sealing-key-backup.yaml 2>/dev/null || true
-    echo "   Сохранено: backups/sealing-key-backup.yaml"
+    echo "   : backups/sealing-key-backup.yaml"
     
     echo ""
-    echo "✅ Post-deployment завершен"
+    echo " Post-deployment "
 }
 
 # ============================================
-# ГЛАВНАЯ ФУНКЦИЯ
+#  
 # ============================================
 
 main() {
-    echo "╔════════════════════════════════════════════════════════════════╗"
-    echo "║   Credit Scoring Model - Deployment на Kubernetes             ║"
-    echo "╚════════════════════════════════════════════════════════════════╝"
+    echo ""
+    echo "   Credit Scoring Model - Deployment  Kubernetes             "
+    echo ""
     echo ""
     
     check_dependencies
     setup_yandex_cloud
     setup_kubeconfig
     
-    read -p "Продолжить с построением образов? (y/n) " -n 1 -r
+    read -p "   ? (y/n) " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         build_and_push_images
@@ -413,7 +413,7 @@ main() {
     deploy_components
     verify_deployment
     
-    read -p "Выполнить тесты? (y/n) " -n 1 -r
+    read -p " ? (y/n) " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         test_deployment
@@ -422,11 +422,11 @@ main() {
     post_deployment
     
     echo ""
-    echo "╔════════════════════════════════════════════════════════════════╗"
-    echo "║   Развертывание завершено!                                    ║"
-    echo "║   Проверьте: kubectl get pods -n ml-serving                   ║"
-    echo "╚════════════════════════════════════════════════════════════════╝"
+    echo ""
+    echo "    !                                    "
+    echo "   : kubectl get pods -n ml-serving                   "
+    echo ""
 }
 
-# Запустить main функцию
+#  main 
 main "$@"

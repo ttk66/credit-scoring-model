@@ -1,22 +1,22 @@
 #!/bin/bash
 
-# Скрипт для заполнения всех placeholder'ов в kubernetes manifests
-# и docker files
+#     placeholder'  kubernetes manifests
+#  docker files
 
 set -e
 
 echo ""
-echo "       Заполнение Placeholder'ов - Kubernetes Manifest       "
+echo "        Placeholder' - Kubernetes Manifest       "
 echo ""
 echo ""
 
 # ============================================
-# КОНФИГУРАЦИЯ
+# 
 # ============================================
 
-echo "=== КОНФИГУРАЦИЯ ==="
+echo "===  ==="
 
-# Получить значения из пользователя или переменных окружения
+#       
 REGISTRY=${REGISTRY:-"cr.yandex/crpn3tq7q9d6m8i8e5vn"}
 CLUSTER_NAME=${CLUSTER_NAME:-"credit-scoring-cluster"}
 PROJECT_NAME=${PROJECT_NAME:-"credit-scoring-model"}
@@ -30,25 +30,25 @@ echo "Domain: $DOMAIN"
 echo "Environment: $ENVIRONMENT"
 echo ""
 
-# Запросить у пользователя если нужно
-read -p "Приняты ли значения выше? (y/n) " -n 1 -r
+#     
+read -p "   ? (y/n) " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    read -p "Введите Registry: " REGISTRY
-    read -p "Введите Cluster Name: " CLUSTER_NAME
-    read -p "Введите Project Name: " PROJECT_NAME
-    read -p "Введите Domain: " DOMAIN
-    read -p "Введите Environment: " ENVIRONMENT
+    read -p " Registry: " REGISTRY
+    read -p " Cluster Name: " CLUSTER_NAME
+    read -p " Project Name: " PROJECT_NAME
+    read -p " Domain: " DOMAIN
+    read -p " Environment: " ENVIRONMENT
 fi
 
 # ============================================
-# ПЕРЕМЕННЫЕ
+# 
 # ============================================
 
 echo ""
-echo "=== АВТОМАТИЧЕСКОЕ ЗАПОЛНЕНИЕ ==="
+echo "===   ==="
 
-# Функция для замены placeholder'ов
+#    placeholder'
 replace_placeholder() {
     local file=$1
     local placeholder=$2
@@ -56,25 +56,25 @@ replace_placeholder() {
     
     if grep -q "$placeholder" "$file"; then
         sed -i "s|$placeholder|$value|g" "$file"
-        echo "$file: $placeholder → $value"
+        echo "$file: $placeholder  $value"
     fi
 }
 
-# Функция для замены во всех файлах
+#      
 replace_in_all() {
     local placeholder=$1
     local value=$2
     local pattern=$3
     
     echo ""
-    echo "Замена: $placeholder → $value"
+    echo ": $placeholder  $value"
     find . -name "$pattern" -type f | while read file; do
         replace_placeholder "$file" "$placeholder" "$value"
     done
 }
 
 # ============================================
-# ЗАМЕНЫ
+# 
 # ============================================
 
 # Registry
@@ -149,15 +149,15 @@ replace_in_all "memory: 512Mi" "memory: $API_MEMORY_REQUEST" "api-deployment.yam
 replace_in_all "memory: 2Gi" "memory: $API_MEMORY_LIMIT" "api-deployment.yaml"
 
 echo ""
-echo "Заполнение placeholder'ов завершено!"
+echo " placeholder' !"
 
 # ============================================
-# ВЫВОД ЗНАЧЕНИЙ
+#  
 # ============================================
 
 echo ""
 echo "                                                               "
-echo "             ИСПОЛЬЗОВАННЫЕ ЗНАЧЕНИЯ                           "
+echo "                                         "
 echo ""
 echo ""
 echo "Registry:              $REGISTRY"
@@ -195,10 +195,10 @@ echo "  Memory Limit:       $API_MEMORY_LIMIT"
 echo ""
 
 # ============================================
-# СОХРАНЕНИЕ КОНФИГУРАЦИИ
+#  
 # ============================================
 
-echo "Сохранение конфигурации..."
+echo " ..."
 cat > .env.deployed << EOF
 REGISTRY=$REGISTRY
 CLUSTER_NAME=$CLUSTER_NAME
@@ -226,14 +226,14 @@ API_MEMORY_REQUEST=$API_MEMORY_REQUEST
 API_MEMORY_LIMIT=$API_MEMORY_LIMIT
 EOF
 
-echo "Конфигурация сохранена в .env.deployed"
+echo "   .env.deployed"
 echo ""
 
 # Attempt to replace remaining placeholders in kubernetes/configs/all-configmaps.yaml
 CONFIGMAP_FILE="kubernetes/configs/all-configmaps.yaml"
 if [ -f "$CONFIGMAP_FILE" ]; then
     if grep -q "YOUR_\|YOUR_BASE64_ENCODED_CREDENTIALS_HERE" "$CONFIGMAP_FILE"; then
-        echo "Найдены незаполненные placeholder'ы в $CONFIGMAP_FILE. Подставим значения." 
+        echo "  placeholder'  $CONFIGMAP_FILE.  ." 
 
         if [ -f .env.deployed ]; then
             export $(grep -v '^#' .env.deployed | xargs)
@@ -279,39 +279,39 @@ if [ -f "$CONFIGMAP_FILE" ]; then
             sed -i '' "s|YOUR_DVC_SECRET_KEY|$S3_SECRET_KEY|g" "$CONFIGMAP_FILE" || true
         fi
 
-        echo "Готово — проверьте $CONFIGMAP_FILE на предмет незаменённых placeholder'ов:" 
+        echo "   $CONFIGMAP_FILE    placeholder':" 
         grep -n "YOUR_\|YOUR_BASE64_ENCODED_CREDENTIALS_HERE" "$CONFIGMAP_FILE" || echo "OK"
     fi
 fi
 
 # ============================================
-# СЛЕДУЮЩИЕ ШАГИ
+#  
 # ============================================
 
-echo "╔════════════════════════════════════════════════════════════════╗"
-echo "║              СЛЕДУЮЩИЕ ШАГИ                                   ║"
-echo "╚════════════════════════════════════════════════════════════════╝"
 echo ""
-echo "1. Проверить что все placeholder'ы заменены:"
+echo "                                                  "
+echo ""
+echo ""
+echo "1.    placeholder' :"
 echo "   grep -r 'placeholder\\|YOUR_\\|CHANGE_ME' kubernetes/"
 echo ""
-echo "2. Создать Docker Registry Secret:"
+echo "2.  Docker Registry Secret:"
 echo "   kubectl create secret docker-registry docker-registry-credentials \\"
 echo "     --docker-server=$DOCKER_SERVER \\"
 echo "     --docker-username=$DOCKER_USERNAME \\"
 echo "     --docker-password='$DOCKER_PASSWORD' \\"
 echo "     -n ml-serving"
 echo ""
-echo "3. Создать Database Secret:"
+echo "3.  Database Secret:"
 echo "   kubectl create secret generic database-credentials \\"
 echo "     --from-literal=username=$DB_USER \\"
 echo "     --from-literal=password='$DB_PASSWORD' \\"
 echo "     -n ml-serving"
 echo ""
-echo "4. Развернуть все компоненты:"
+echo "4.   :"
 echo "   bash scripts/full-deployment.sh"
 echo ""
-echo "5. Проверить статус:"
+echo "5.  :"
 echo "   kubectl get pods -n ml-serving"
 echo "   kubectl get svc -n ml-serving"
 echo ""

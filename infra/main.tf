@@ -10,14 +10,14 @@ locals {
   name_prefix = "${var.project_name}-${var.environment}"
 }
 
-# Создаем Service Account для Terraform
+#  Service Account  Terraform
 resource "yandex_iam_service_account" "terraform" {
   name        = "${local.name_prefix}-terraform-sa"
   description = "Service account for Terraform"
   folder_id   = var.yc_folder_id
 }
 
-# Назначаем роли Service Account
+#   Service Account
 resource "yandex_resourcemanager_folder_iam_member" "editor" {
   folder_id = var.yc_folder_id
   role      = "editor"
@@ -36,14 +36,14 @@ resource "yandex_resourcemanager_folder_iam_member" "k8s_admin" {
   member    = "serviceAccount:${yandex_iam_service_account.terraform.id}"
 }
 
-# Создаем статический ключ для Service Account
+#     Service Account
 resource "yandex_iam_service_account_static_access_key" "terraform_key" {
   service_account_id = yandex_iam_service_account.terraform.id
   description        = "Static access key for Terraform"
 }
 
-# TODO: bucket для remote state требует специальных прав storage.admin
-# Может быть создан отдельно через yc CLI или через Service Account с правами storage.admin
+# TODO: bucket  remote state    storage.admin
+#      yc CLI   Service Account   storage.admin
 # resource "yandex_storage_bucket" "terraform_state" {
 #   bucket     = "${local.name_prefix}-terraform-state"
 #   access_key = yandex_iam_service_account_static_access_key.terraform_key.access_key
@@ -59,7 +59,7 @@ resource "yandex_iam_service_account_static_access_key" "terraform_key" {
 # }
 
 
-# Подключаем модули
+#  
 module "vpc" {
   source = "./modules/vpc"
   
@@ -90,8 +90,8 @@ module "kubernetes" {
   depends_on = [module.vpc]
 }
 
-# TODO: Storage buckets требуют специальных прав storage.admin
-# Будут созданы отдельно через yc CLI или через Service Account с правами
+# TODO: Storage buckets    storage.admin
+#     yc CLI   Service Account  
 # module "storage" {
 #   source = "./modules/vpc/storage"
 #   
@@ -101,7 +101,7 @@ module "kubernetes" {
 #   tags        = local.tags
 # }
 
-# TODO: Мониторинг будет добавлен на следующем этапе
+# TODO:      
 # module "monitoring" {
 #   source = "./modules/monitoring"
 #   
@@ -121,7 +121,7 @@ module "ml_serving" {
   container_registry_id = "crp9o02lqmtgc663hs6c"
   storage_access_key    = var.yc_access_key
   storage_secret_key    = var.yc_secret_key
-  model_bucket_name     = "credit-scoring-dev-models"  # TODO: создать через yc CLI
+  model_bucket_name     = "credit-scoring-dev-models"  # TODO:   yc CLI
   api_domain            = "api.${var.project_name}.example.com"
   tags                  = local.tags
   

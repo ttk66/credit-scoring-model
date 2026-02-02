@@ -11,16 +11,16 @@ output "k8s_cluster_ca_certificate" {
 
 output "model_bucket_name" {
   description = "Name of the bucket for ML models"
-  value       = "credit-scoring-dev-models"  # TODO: создать через yc CLI
+  value       = "credit-scoring-dev-models"  # TODO:   yc CLI
 }
 
-# TODO: Мониторинг будет добавлен позже
+# TODO:    
 # output "monitoring_dashboard_url" {
 #   description = "URL of the monitoring dashboard"
 #   value       = module.monitoring.dashboard_url
 # }
 
-# TODO: ML serving outputs будут добавлены позже
+# TODO: ML serving outputs   
 # output "ml_api_endpoint" {
 #   description = "Endpoint for ML model API"
 #   value       = module.ml_serving.api_endpoint

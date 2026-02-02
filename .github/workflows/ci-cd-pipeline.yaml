@@ -35,7 +35,7 @@ env:
   AWS_REGION: ru-central1
   YC_ENDPOINT: https://storage.yandexcloud.net
 
-# Переменные для разных окружений
+#    
 jobs:
   setup:
     runs-on: ubuntu-latest

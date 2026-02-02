@@ -12,13 +12,13 @@ MODEL_PATH = Path("models/nn_model.pth")
 SCALER_PATH = Path("models/nn_scaler.joblib")
 ONNX_PATH = Path("models/nn_model.onnx")
 
-# Добавляем безопасные глобалы для загрузки модели
+#      
 
 torch.serialization.add_safe_globals([numpy._core.multiarray.scalar])
 
 
 class CreditScoringNN(torch.nn.Module):
-    """Нейронная сеть для кредитного скоринга"""
+    """    """
 
     def __init__(self, input_size: int, dropout_rate: float = 0.3):
         super(CreditScoringNN, self).__init__()
@@ -41,11 +41,11 @@ class CreditScoringNN(torch.nn.Module):
 
 
 def load_pytorch_model(model_path: Path) -> Tuple[torch.nn.Module, Dict]:
-    """Загрузка PyTorch модели с обработкой новой версии"""
+    """ PyTorch     """
     print(f"Loading PyTorch model from {model_path}...")
 
     try:
-        # Пробуем с weights_only=False
+        #   weights_only=False
         checkpoint = torch.load(
             model_path, map_location=torch.device("cpu"), weights_only=False
         )
@@ -53,11 +53,11 @@ def load_pytorch_model(model_path: Path) -> Tuple[torch.nn.Module, Dict]:
     except Exception as e:
         print(f"First attempt failed: {e}")
         try:
-            # Создаем экземпляр модели
+            #   
             if "input_size" in locals() or "input_size" in globals():
                 input_size = checkpoint.get("input_size", 32)
             else:
-                # Пробуем получить input_size из сохраненной модели
+                #   input_size   
                 import pickle
 
                 with open(model_path, "rb") as f:
@@ -66,7 +66,7 @@ def load_pytorch_model(model_path: Path) -> Tuple[torch.nn.Module, Dict]:
 
             model = CreditScoringNN(input_size=input_size)
 
-            # Загружаем только state_dict
+            #   state_dict
             state_dict = torch.load(model_path, map_location="cpu")["model_state_dict"]
             model.load_state_dict(state_dict)
             model.eval()
@@ -80,7 +80,7 @@ def load_pytorch_model(model_path: Path) -> Tuple[torch.nn.Module, Dict]:
     input_size = checkpoint.get("input_size", 32)
     model = CreditScoringNN(input_size=input_size)
 
-    # Загружаем веса
+    #  
     if "model_state_dict" in checkpoint:
         model.load_state_dict(checkpoint["model_state_dict"])
     else:
@@ -97,11 +97,11 @@ def convert_to_onnx(
     onnx_path: Path,
     opset_version: int = 13,
 ):
-    """Конвертация PyTorch модели в ONNX формат"""
+    """ PyTorch   ONNX """
 
     dummy_input = torch.randn(1, input_size, dtype=torch.float32)
 
-    # Экспорт в ONNX
+    #   ONNX
     torch.onnx.export(
         pytorch_model,
         dummy_input,
@@ -117,7 +117,7 @@ def convert_to_onnx(
 
     print(f"Model converted to ONNX and saved to: {onnx_path}")
 
-    # Валидация ONNX модели
+    #  ONNX 
     try:
         onnx_model = onnx.load(onnx_path)
         onnx.checker.check_model(onnx_model)
@@ -129,7 +129,7 @@ def convert_to_onnx(
 
 
 def create_onnx_session(onnx_path: Path) -> ort.InferenceSession:
-    """Создание ONNX Runtime сессии"""
+    """ ONNX Runtime """
     if not onnx_path.exists():
         raise FileNotFoundError(f"ONNX model not found: {onnx_path}")
 
@@ -153,22 +153,22 @@ def validate_conversion(
     test_data: np.ndarray,
     tolerance: float = 1e-4,
 ):
-    """Валидация корректности конвертации"""
+    """  """
 
     print("\n" + "=" * 60)
     print("CONVERSION VALIDATION")
     print("=" * 60)
 
-    # Получаем предсказания от PyTorch
+    #    PyTorch
     pytorch_model.eval()
     with torch.no_grad():
         pytorch_output = pytorch_model(torch.FloatTensor(test_data)).numpy()
 
-    # Получаем предсказания от ONNX
+    #    ONNX
     input_name = onnx_session.get_inputs()[0].name
     onnx_output = onnx_session.run(None, {input_name: test_data.astype(np.float32)})[0]
 
-    # Сравнение результатов
+    #  
     abs_diff = np.abs(pytorch_output - onnx_output)
     max_diff = np.max(abs_diff)
     mean_diff = np.mean(abs_diff)
@@ -192,17 +192,17 @@ def compare_performance(
     test_data: np.ndarray,
     n_iterations: int = 100,
 ):
-    """Сравнение производительности PyTorch и ONNX моделей"""
+    """  PyTorch  ONNX """
 
     print("\n" + "=" * 60)
     print("PERFORMANCE COMPARISON")
     print("=" * 60)
 
-    # Подготовка данных
+    #  
     pytorch_input = torch.FloatTensor(test_data)
     onnx_input = {onnx_session.get_inputs()[0].name: test_data.astype(np.float32)}
 
-    # Тестирование PyTorch
+    #  PyTorch
     print("\nPyTorch Inference:")
     print("-" * 40)
 
@@ -211,7 +211,7 @@ def compare_performance(
         with torch.no_grad():
             _ = pytorch_model(pytorch_input[:1])
 
-    # Измерение времени
+    #  
     start_time = time.time()
 
     for i in range(n_iterations):
@@ -222,7 +222,7 @@ def compare_performance(
     print(f"Total time for {n_iterations} iterations: {torch_time:.4f} seconds")
     print(f"Time per inference: {(torch_time / n_iterations * 1000):.4f} ms")
 
-    # Тестирование ONNX
+    #  ONNX
     print("\nONNX Inference:")
     print("-" * 40)
 
@@ -230,7 +230,7 @@ def compare_performance(
     for _ in range(10):
         _ = onnx_session.run(None, onnx_input)
 
-    # Измерение времени
+    #  
     start_time = time.time()
 
     for i in range(n_iterations):
@@ -240,7 +240,7 @@ def compare_performance(
     print(f"Total time for {n_iterations} iterations: {onnx_time:.4f} seconds")
     print(f"Time per inference: {(onnx_time / n_iterations * 1000):.4f} ms")
 
-    # Сравнение
+    # 
     print("\n" + "=" * 60)
     print("PERFORMANCE SUMMARY")
     print("=" * 60)
@@ -264,13 +264,13 @@ def compare_performance(
 
 
 def run_complete_pipeline():
-    """Полный пайплайн конвертации и валидации"""
+    """    """
 
     print("=" * 60)
     print("ONNX CONVERSION PIPELINE")
     print("=" * 60)
 
-    # Загрузка PyTorch модели
+    #  PyTorch 
     print("\nLoading PyTorch model...")
     try:
         pytorch_model, checkpoint = load_pytorch_model(MODEL_PATH)
@@ -280,23 +280,23 @@ def run_complete_pipeline():
         print(f"Failed to load model: {e}")
         print("\nTrying alternative loading method...")
 
-        # Альтернативный метод загрузки
+        #   
         try:
-            # Пробуем загрузить как есть
+            #    
             pytorch_model = torch.jit.load(str(MODEL_PATH))
-            input_size = 32  # Предполагаем
+            input_size = 32  # 
             checkpoint = {"input_size": input_size}
             print(f"Model loaded with torch.jit")
         except BaseException:
             print("All loading methods failed")
             return None
 
-    # Загрузка скейлера и подготовка тестовых данных
+    #      
     print("\n2. Preparing test data...")
     try:
         scaler = joblib.load(SCALER_PATH)
 
-        # Создаем тестовые данные
+        #   
         n_test_samples = 100
         test_data = np.random.randn(n_test_samples, input_size)
         test_data_scaled = scaler.transform(test_data)
@@ -307,7 +307,7 @@ def run_complete_pipeline():
         print("Using random test data without scaling")
         test_data_scaled = np.random.randn(10, input_size).astype(np.float32)
 
-    # Конвертация в ONNX
+    #   ONNX
     print("\nConverting to ONNX...")
     try:
         onnx_model = convert_to_onnx(pytorch_model, input_size, ONNX_PATH)
@@ -316,7 +316,7 @@ def run_complete_pipeline():
         print(f"Conversion failed: {e}")
         return None
 
-    # Создание ONNX Runtime сессии
+    #  ONNX Runtime 
     print("\nCreating ONNX Runtime session...")
     try:
         onnx_session = create_onnx_session(ONNX_PATH)
@@ -325,7 +325,7 @@ def run_complete_pipeline():
         print(f"Failed to create ONNX session: {e}")
         return None
 
-    # Валидация конвертации
+    #  
     print("\n5. Validating conversion...")
     is_valid = validate_conversion(
         pytorch_model,
@@ -334,7 +334,7 @@ def run_complete_pipeline():
         tolerance=1e-3,
     )
 
-    # Сравнение производительности
+    #  
     print("\n6. Comparing performance...")
     try:
         performance = compare_performance(
@@ -347,7 +347,7 @@ def run_complete_pipeline():
         print(f"Performance comparison failed: {e}")
         performance = {"pytorch_time_ms": 0, "onnx_time_ms": 0, "speedup": 0}
 
-    # Сохранение результатов
+    #  
     print("\n7. Saving results...")
     import json
 
@@ -372,10 +372,10 @@ def run_complete_pipeline():
 
     print(f"Results saved to: {results_path}")
 
-    # Дополнительная проверка
+    #  
     print("\nAdditional checks...")
 
-    # Проверяем, что ONNX модель работает
+    # ,  ONNX  
     try:
         sample_input = np.random.randn(1, input_size).astype(np.float32)
         if scaler:
@@ -402,15 +402,15 @@ def run_complete_pipeline():
     return results
 
 
-# Альтернативный упрощенный скрипт конвертации
+#    
 def simple_convert():
-    """Упрощенная конвертация без сложной валидации"""
+    """    """
     print("=" * 60)
     print("SIMPLE ONNX CONVERSION")
     print("=" * 60)
 
     try:
-        # Загружаем модель
+        #  
         print("\n1. Loading model...")
         import pickle
 
@@ -419,7 +419,7 @@ def simple_convert():
 
         input_size = checkpoint.get("input_size", 32)
 
-        # Создаем модель
+        #  
         model = CreditScoringNN(input_size=input_size)
 
         if "model_state_dict" in checkpoint:
@@ -428,7 +428,7 @@ def simple_convert():
 
         print(f"Model loaded: input_size={input_size}")
 
-        # Конвертируем
+        # 
         print("\nConverting to ONNX...")
         dummy_input = torch.randn(1, input_size, dtype=torch.float32)
 
@@ -445,7 +445,7 @@ def simple_convert():
 
         print(f"ONNX model saved: {ONNX_PATH}")
 
-        # Простая проверка
+        #  
         print("\nSimple validation...")
         ort_session = ort.InferenceSession(str(ONNX_PATH))
 

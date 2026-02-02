@@ -163,7 +163,7 @@ def train_model(n_iter: int = 20, cv: int = 5):
         MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
         joblib.dump(best_model, MODEL_PATH)
 
-        print(f"Модель сохранена: {MODEL_PATH}")
+        print(f" : {MODEL_PATH}")
 
         return best_model, X_test, y_test, y_prob, metrics
 

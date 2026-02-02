@@ -40,5 +40,5 @@ spec:
     targetPort: 8000
     protocol: TCP
   type: LoadBalancer
-  loadBalancerIP: 51.250.12.34  # Статический IP
+  loadBalancerIP: 51.250.12.34  #  IP
   externalTrafficPolicy: Local
