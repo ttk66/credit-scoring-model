@@ -330,7 +330,7 @@ def run_complete_pipeline():
     is_valid = validate_conversion(
         pytorch_model,
         onnx_session,
-        test_data_scaled[:10],  # Первые 10 образцов для валидации
+        test_data_scaled[:10],
         tolerance=1e-3,
     )
 
@@ -340,7 +340,7 @@ def run_complete_pipeline():
         performance = compare_performance(
             pytorch_model,
             onnx_session,
-            test_data_scaled[:50],  # 50 образцов для теста производительности
+            test_data_scaled[:50],
             n_iterations=100,
         )
     except Exception as e:

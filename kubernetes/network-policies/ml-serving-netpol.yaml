@@ -1,0 +1,199 @@
+---
+# Network Policy для ограничения трафика в namespace ml-serving
+# Позволяет:
+# 1. Трафик от ingress controller к API pods
+# 2. Трафик между pods в namespace
+# 3. Исходящий трафик в интернет для downloads
+# Блокирует:
+# 1. Трафик из других namespaces
+# 2. Несанкционированный входящий трафик
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ml-serving-default-deny
+  namespace: ml-serving
+  labels:
+    app: network-policy
+    version: v1
+spec:
+  # Применяется ко всем подам в namespace
+  podSelector: {}
+  
+  # По умолчанию блокируем весь входящий трафик
+  policyTypes:
+  - Ingress
+  
+  # Разрешаем только трафик от ingress контроллера
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+
+---
+# Network Policy для API deployment
+# Разрешает входящий трафик от ingress controller
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: credit-scoring-api-allow-ingress
+  namespace: ml-serving
+  labels:
+    app: network-policy
+    service: credit-scoring-api
+spec:
+  podSelector:
+    matchLabels:
+      app: credit-scoring-api
+  
+  policyTypes:
+  - Ingress
+  - Egress
+  
+  # Входящий трафик
+  ingress:
+  # От Nginx Ingress Controller
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8000
+      name: http
+    - protocol: TCP
+      port: 9090
+      name: metrics
+  
+  # От Prometheus в kube-system для сбора метрик
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+      podSelector:
+        matchLabels:
+          app: prometheus
+    ports:
+    - protocol: TCP
+      port: 9090
+      name: metrics
+  
+  # От других pods в том же namespace (для сервис-сервис коммуникации)
+  - from:
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: 8000
+    - protocol: TCP
+      port: 9090
+  
+  # Исходящий трафик
+  egress:
+  # Разрешаем DNS
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+    ports:
+    - protocol: UDP
+      port: 53
+  
+  # Разрешаем трафик к другим сервисам в namespace
+  - to:
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: 5432  # Database
+    - protocol: TCP
+      port: 6379  # Redis
+  
+  # Разрешаем исходящий трафик в интернет (для скачивания моделей, обновлений)
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 443  # HTTPS
+    - protocol: TCP
+      port: 80   # HTTP
+
+---
+# Network Policy для базы данных
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: database-allow-api
+  namespace: ml-serving
+  labels:
+    app: network-policy
+    service: database
+spec:
+  podSelector:
+    matchLabels:
+      app: database
+  
+  policyTypes:
+  - Ingress
+  
+  # Входящий трафик только от API
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: credit-scoring-api
+    ports:
+    - protocol: TCP
+      port: 5432
+
+---
+# Network Policy для Redis
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: redis-allow-api
+  namespace: ml-serving
+  labels:
+    app: network-policy
+    service: redis
+spec:
+  podSelector:
+    matchLabels:
+      app: redis
+  
+  policyTypes:
+  - Ingress
+  
+  # Входящий трафик только от API
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: credit-scoring-api
+    ports:
+    - protocol: TCP
+      port: 6379
+
+---
+# Network Policy для запрета трафика из других namespaces
+# (уже определено в default-deny, но явно указываем для ясности)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-other-namespaces
+  namespace: ml-serving
+  labels:
+    app: network-policy
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  
+  # Пусто - не разрешаем трафик (другие правила добавляют исключения)
+  ingress: []

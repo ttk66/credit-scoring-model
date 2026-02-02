@@ -1,0 +1,185 @@
+# Resource Quota для namespace ml-serving
+# Ограничивает общее потребление ресурсов в namespace
+# Защищает от ошибок в приложении или DDoS атак
+
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: ml-serving-quota
+  namespace: ml-serving
+spec:
+  # Ограничение на CPU и Memory requests
+  hard:
+    requests.cpu: "20"          # 20 CPU cores
+    requests.memory: "40Gi"     # 40 GB RAM
+    limits.cpu: "40"            # 40 CPU cores (лимиты)
+    limits.memory: "80Gi"       # 80 GB RAM (лимиты)
+    
+    # Количество pods
+    pods: "100"
+    
+    # Количество PVC
+    persistentvolumeclaims: "10"
+    
+    # Количество сервисов
+    services: "10"
+    
+    # Количество configmaps
+    configmaps: "50"
+    
+    # Количество secrets
+    secrets: "50"
+    
+    # GPU (если используется)
+    "limits.nvidia.com/gpu": "4"
+    
+    # Requests для GPU
+    "requests.nvidia.com/gpu": "2"
+  
+  # Scope (по умолчанию применяется ко всем pods)
+  scopeSelector:
+    matchExpressions:
+    # Не применяется к pods с BestEffort QoS
+    - operator: NotIn
+      scopeName: Terminating
+      values: ["active"]
+
+---
+# Resource Quota для Compute в ml-serving
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: ml-serving-compute-quota
+  namespace: ml-serving
+spec:
+  hard:
+    # CPU requests/limits
+    requests.cpu: "16"
+    limits.cpu: "32"
+    
+    # Memory requests/limits
+    requests.memory: "32Gi"
+    limits.memory: "64Gi"
+  
+  # Применяется только к pods с Guaranteed QoS class
+  scopeSelector:
+    matchExpressions:
+    - operator: In
+      scopeName: PriorityClass
+      values: ["production"]
+
+---
+# Network Policy Quota (ограничение на сетевые ресурсы)
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: ml-serving-network-quota
+  namespace: ml-serving
+spec:
+  hard:
+    # Сервисы типа LoadBalancer
+    "services.loadbalancers": "2"
+    
+    # Services типа NodePort
+    "services.nodeports": "2"
+    
+    # Ingress
+    "ingresses.networking.k8s.io": "5"
+
+---
+# Default Resource Quota для namespace ml-serving
+# Задает лимиты для pods без явно указанных requests/limits
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: ml-serving-limits
+  namespace: ml-serving
+spec:
+  limits:
+  # Для контейнеров
+  - type: Container
+    default:
+      # Default limits (если не указаны)
+      memory: "512Mi"
+      cpu: "500m"
+    defaultRequest:
+      # Default requests (если не указаны)
+      memory: "256Mi"
+      cpu: "250m"
+    min:
+      # Минимальные значения
+      memory: "64Mi"
+      cpu: "10m"
+    max:
+      # Максимальные значения
+      memory: "2Gi"
+      cpu: "2"
+  
+  # Для pods
+  - type: Pod
+    min:
+      memory: "64Mi"
+      cpu: "10m"
+    max:
+      memory: "4Gi"
+      cpu: "4"
+  
+  # Для PVC
+  - type: PersistentVolumeClaim
+    min:
+      storage: "1Gi"
+    max:
+      storage: "100Gi"
+
+---
+# Network Policy Quota для сетевого трафика
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ml-serving-network-limit
+  namespace: ml-serving
+spec:
+  # Применяется ко всем pods в namespace
+  podSelector: {}
+  
+  policyTypes:
+  - Ingress
+  - Egress
+  
+  # Входящий трафик
+  ingress:
+  # От ingress controller
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8000
+    - protocol: TCP
+      port: 9090
+  
+  # Исходящий трафик
+  egress:
+  # DNS
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+  
+  # Другие сервисы в namespace
+  - to:
+    - podSelector: {}
+  
+  # Интернет (HTTPS и HTTP)
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80

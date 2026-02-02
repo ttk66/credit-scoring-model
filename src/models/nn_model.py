@@ -44,7 +44,7 @@ class CreditScoringNN(nn.Module):
 def prepare_data_for_nn(
     X: pd.DataFrame, y: pd.Series
 ) -> Tuple[np.ndarray, np.ndarray, RobustScaler]:
-    """Подготовка данных для нейронной сети с обработкой NaN"""
+    """Подготовка данных для нейронной сети"""
     print("\nPreprocessing data...")
 
     # Копируем и заполняем NaN
@@ -89,7 +89,7 @@ def train_nn_model(
     batch_size: int = 128,
     learning_rate: float = 0.001,
 ) -> Tuple[CreditScoringNN, dict]:
-    """Обучение нейронной сети с улучшенной стабильностью"""
+    """Обучение нейронной сети"""
 
     print(f"\nTraining setup:")
     print(f"  Input size: {input_size}")
@@ -111,7 +111,7 @@ def train_nn_model(
     # Инициализация модели с инициализацией весов
     model = CreditScoringNN(input_size=input_size)
 
-    # Xavier инициализация весов для лучшей стабильности
+    # Xavier инициализация весов
     for layer in model.network:
         if isinstance(layer, nn.Linear):
             nn.init.xavier_uniform_(layer.weight)

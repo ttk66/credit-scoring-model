@@ -1,10 +1,9 @@
 locals {
-  # Common tags
+  # Common tags (lowercase for Yandex labels)
   tags = {
-    Project     = var.project_name
-    Environment = var.environment
-    ManagedBy   = "Terraform"
-    CreatedAt   = timestamp()
+    project     = var.project_name
+    environment = var.environment
+    managed-by  = "terraform"
   }
   
   # Resource naming convention
@@ -43,20 +42,22 @@ resource "yandex_iam_service_account_static_access_key" "terraform_key" {
   description        = "Static access key for Terraform"
 }
 
-# Создаем bucket для remote state (должен быть создан заранее или через отдельный скрипт)
-resource "yandex_storage_bucket" "terraform_state" {
-  bucket     = "${local.name_prefix}-terraform-state"
-  access_key = yandex_iam_service_account_static_access_key.terraform_key.access_key
-  secret_key = yandex_iam_service_account_static_access_key.terraform_key.secret_key
+# TODO: bucket для remote state требует специальных прав storage.admin
+# Может быть создан отдельно через yc CLI или через Service Account с правами storage.admin
+# resource "yandex_storage_bucket" "terraform_state" {
+#   bucket     = "${local.name_prefix}-terraform-state"
+#   access_key = yandex_iam_service_account_static_access_key.terraform_key.access_key
+#   secret_key = yandex_iam_service_account_static_access_key.terraform_key.secret_key
+#
+#   versioning {
+#     enabled = true
+#   }
+#
+#   lifecycle {
+#     prevent_destroy = true
+#   }
+# }
 
-  versioning {
-    enabled = true
-  }
-
-  lifecycle {
-    prevent_destroy = true
-  }
-}
 
 # Подключаем модули
 module "vpc" {
@@ -65,50 +66,64 @@ module "vpc" {
   name_prefix = local.name_prefix
   vpc_cidr    = var.vpc_cidr
   tags        = local.tags
+  zones       = [var.yc_zone]
 }
 
 module "kubernetes" {
-  source = "./modules/kubernetes"
+  source = "./modules/vpc/kubernetes"
   
   name_prefix          = local.name_prefix
   vpc_id               = module.vpc.vpc_id
   subnet_ids           = module.vpc.subnet_ids
+  folder_id            = var.yc_folder_id
+  security_group_id    = module.vpc.security_group_id
   k8s_version          = var.k8s_version
   node_count           = var.k8s_node_count
   node_disk_size       = var.k8s_node_disk_size
   node_cpu             = var.k8s_node_cpu
   node_memory          = var.k8s_node_memory
   service_account_name = yandex_iam_service_account.terraform.name
+  zone                 = var.yc_zone
+  environment          = var.environment
   tags                 = local.tags
   
   depends_on = [module.vpc]
 }
 
-module "storage" {
-  source = "./modules/storage"
-  
-  name_prefix = local.name_prefix
-  tags        = local.tags
-}
+# TODO: Storage buckets требуют специальных прав storage.admin
+# Будут созданы отдельно через yc CLI или через Service Account с правами
+# module "storage" {
+#   source = "./modules/vpc/storage"
+#   
+#   name_prefix = local.name_prefix
+#   folder_id   = var.yc_folder_id
+#   environment = var.environment
+#   tags        = local.tags
+# }
 
-module "monitoring" {
-  source = "./modules/monitoring"
-  
-  name_prefix    = local.name_prefix
-  k8s_cluster_id = module.kubernetes.cluster_id
-  tags           = local.tags
-  
-  depends_on = [module.kubernetes]
-}
+# TODO: Мониторинг будет добавлен на следующем этапе
+# module "monitoring" {
+#   source = "./modules/monitoring"
+#   
+#   name_prefix    = local.name_prefix
+#   k8s_cluster_id = module.kubernetes.cluster_id
+#   folder_id      = var.yc_folder_id
+#   tags           = local.tags
+#   
+#   depends_on = [module.kubernetes]
+# }
+
 
 module "ml_serving" {
   source = "./modules/ml-serving"
   
-  name_prefix       = local.name_prefix
-  k8s_cluster_endpoint = module.kubernetes.cluster_external_v4_endpoint
-  k8s_cluster_ca    = module.kubernetes.cluster_ca_certificate
-  model_bucket_name = module.storage.model_bucket_name
-  tags              = local.tags
+  name_prefix           = local.name_prefix
+  container_registry_id = "crp9o02lqmtgc663hs6c"
+  storage_access_key    = var.yc_access_key
+  storage_secret_key    = var.yc_secret_key
+  model_bucket_name     = "credit-scoring-dev-models"  # TODO: создать через yc CLI
+  api_domain            = "api.${var.project_name}.example.com"
+  tags                  = local.tags
   
-  depends_on = [module.kubernetes, module.storage]
+  depends_on = [module.kubernetes]
 }

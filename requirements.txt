@@ -7,3 +7,23 @@ scikit-learn
 pandas
 numpy
 joblib
+
+# API & Web Framework
+fastapi
+uvicorn
+pydantic
+psycopg2-binary
+redis
+
+# Monitoring & Observability
+prometheus-client>=0.16.0
+evidently>=0.4.0
+scipy
+
+# Airflow (optional, for retraining orchestration)
+apache-airflow>=2.5.0
+
+# Security scanning
+bandit
+pip-audit
+safety

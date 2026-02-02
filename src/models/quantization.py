@@ -497,7 +497,7 @@ def run_optimization_pipeline():
 if __name__ == "__main__":
     results = run_optimization_pipeline()
     if results:
-        print(f"\n📁 Files created:")
+        print(f"\nFiles created:")
         for key, value in results["file_sizes"].items():
             if value > 0:
                 print(f"  - {key}: {value:.2f} MB")

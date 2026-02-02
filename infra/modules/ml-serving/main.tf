@@ -1,5 +1,5 @@
 # Namespace для ML приложений
-resource "kubernetes_namespace" "ml_serving" {
+resource "kubernetes_namespace_v1" "ml_serving" {
   metadata {
     name = "ml-serving"
     labels = {
@@ -9,10 +9,10 @@ resource "kubernetes_namespace" "ml_serving" {
 }
 
 # ConfigMap с конфигурацией модели
-resource "kubernetes_config_map" "model_config" {
+resource "kubernetes_config_map_v1" "model_config" {
   metadata {
     name      = "model-config"
-    namespace = kubernetes_namespace.ml_serving.metadata[0].name
+    namespace = kubernetes_namespace_v1.ml_serving.metadata[0].name
   }
 
   data = {
@@ -44,10 +44,10 @@ resource "kubernetes_config_map" "model_config" {
 }
 
 # Secret с ключами доступа к storage
-resource "kubernetes_secret" "storage_credentials" {
+resource "kubernetes_secret_v1" "storage_credentials" {
   metadata {
     name      = "storage-credentials"
-    namespace = kubernetes_namespace.ml_serving.metadata[0].name
+    namespace = kubernetes_namespace_v1.ml_serving.metadata[0].name
   }
 
   data = {
@@ -59,10 +59,10 @@ resource "kubernetes_secret" "storage_credentials" {
 }
 
 # Deployment для ML serving
-resource "kubernetes_deployment" "ml_api" {
+resource "kubernetes_deployment_v1" "ml_api" {
   metadata {
     name      = "credit-scoring-api"
-    namespace = kubernetes_namespace.ml_serving.metadata[0].name
+    namespace = kubernetes_namespace_v1.ml_serving.metadata[0].name
     labels = {
       app = "credit-scoring-api"
     }
@@ -90,7 +90,7 @@ resource "kubernetes_deployment" "ml_api" {
       }
 
       spec {
-        service_account_name = kubernetes_service_account.ml_serving.metadata[0].name
+        service_account_name = kubernetes_service_account_v1.ml_serving.metadata[0].name
         
         container {
           name  = "api"
@@ -109,7 +109,7 @@ resource "kubernetes_deployment" "ml_api" {
 
           env {
             name  = "MODEL_PATH"
-            value = "/models/credit_scoring.onnx"
+            value = "/models/nn_model.onnx"
           }
 
           env {
@@ -121,7 +121,7 @@ resource "kubernetes_deployment" "ml_api" {
             name = "STORAGE_ACCESS_KEY"
             value_from {
               secret_key_ref {
-                name = kubernetes_secret.storage_credentials.metadata[0].name
+                name = kubernetes_secret_v1.storage_credentials.metadata[0].name
                 key  = "access-key"
               }
             }
@@ -131,7 +131,7 @@ resource "kubernetes_deployment" "ml_api" {
             name = "STORAGE_SECRET_KEY"
             value_from {
               secret_key_ref {
-                name = kubernetes_secret.storage_credentials.metadata[0].name
+                name = kubernetes_secret_v1.storage_credentials.metadata[0].name
                 key  = "secret-key"
               }
             }
@@ -190,10 +190,20 @@ resource "kubernetes_deployment" "ml_api" {
           }
 
           env {
+            name  = "MODEL_KEY"
+            value = "nn_model.onnx"
+          }
+
+          env {
+            name  = "MODEL_PATH"
+            value = "/models/nn_model.onnx"
+          }
+
+          env {
             name = "STORAGE_ACCESS_KEY"
             value_from {
               secret_key_ref {
-                name = kubernetes_secret.storage_credentials.metadata[0].name
+                name = kubernetes_secret_v1.storage_credentials.metadata[0].name
                 key  = "access-key"
               }
             }
@@ -203,7 +213,7 @@ resource "kubernetes_deployment" "ml_api" {
             name = "STORAGE_SECRET_KEY"
             value_from {
               secret_key_ref {
-                name = kubernetes_secret.storage_credentials.metadata[0].name
+                name = kubernetes_secret_v1.storage_credentials.metadata[0].name
                 key  = "secret-key"
               }
             }
@@ -234,7 +244,7 @@ resource "kubernetes_deployment" "ml_api" {
         volume {
           name = "config-volume"
           config_map {
-            name = kubernetes_config_map.model_config.metadata[0].name
+            name = kubernetes_config_map_v1.model_config.metadata[0].name
           }
         }
       }
@@ -243,10 +253,10 @@ resource "kubernetes_deployment" "ml_api" {
 }
 
 # Service для доступа к API
-resource "kubernetes_service" "ml_api" {
+resource "kubernetes_service_v1" "ml_api" {
   metadata {
     name      = "credit-scoring-api"
-    namespace = kubernetes_namespace.ml_serving.metadata[0].name
+    namespace = kubernetes_namespace_v1.ml_serving.metadata[0].name
   }
 
   spec {
@@ -274,7 +284,7 @@ resource "kubernetes_service" "ml_api" {
 resource "kubernetes_ingress_v1" "ml_api" {
   metadata {
     name      = "credit-scoring-ingress"
-    namespace = kubernetes_namespace.ml_serving.metadata[0].name
+    namespace = kubernetes_namespace_v1.ml_serving.metadata[0].name
     annotations = {
       "kubernetes.io/ingress.class" = "nginx"
       "nginx.ingress.kubernetes.io/ssl-redirect" = "true"
@@ -291,7 +301,7 @@ resource "kubernetes_ingress_v1" "ml_api" {
           path_type = "Prefix"
           backend {
             service {
-              name = kubernetes_service.ml_api.metadata[0].name
+              name = kubernetes_service_v1.ml_api.metadata[0].name
               port {
                 number = 80
               }
@@ -312,14 +322,14 @@ resource "kubernetes_ingress_v1" "ml_api" {
 resource "kubernetes_horizontal_pod_autoscaler_v2" "ml_api" {
   metadata {
     name      = "credit-scoring-api-hpa"
-    namespace = kubernetes_namespace.ml_serving.metadata[0].name
+    namespace = kubernetes_namespace_v1.ml_serving.metadata[0].name
   }
 
   spec {
     scale_target_ref {
       api_version = "apps/v1"
       kind        = "Deployment"
-      name        = kubernetes_deployment.ml_api.metadata[0].name
+      name        = kubernetes_deployment_v1.ml_api.metadata[0].name
     }
 
     min_replicas = 2
@@ -350,10 +360,10 @@ resource "kubernetes_horizontal_pod_autoscaler_v2" "ml_api" {
 }
 
 # Service Account для ML serving
-resource "kubernetes_service_account" "ml_serving" {
+resource "kubernetes_service_account_v1" "ml_serving" {
   metadata {
     name      = "ml-serving-sa"
-    namespace = kubernetes_namespace.ml_serving.metadata[0].name
+    namespace = kubernetes_namespace_v1.ml_serving.metadata[0].name
   }
 
   automount_service_account_token = true

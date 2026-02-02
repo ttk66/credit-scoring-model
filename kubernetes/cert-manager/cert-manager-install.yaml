@@ -1,0 +1,82 @@
+# Namespace для cert-manager
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cert-manager
+  labels:
+    cert-manager.io/disable-validation: "true"
+
+---
+# ClusterIssuer для Let's Encrypt Production
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    # Production Let's Encrypt сервер
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: m.chernikow2018@yandex.ru  # ЗАМЕНИТЬ НА РЕАЛЬНЫЙ EMAIL
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    
+    # HTTP-01 challenge solver
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+
+---
+# ClusterIssuer для Let's Encrypt Staging (для тестирования)
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    # Staging Let's Encrypt сервер (не выдает реальные сертификаты)
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    email: m.chernikow2018@yandex.ru  # ЗАМЕНИТЬ НА РЕАЛЬНЫЙ EMAIL
+    privateKeySecretRef:
+      name: letsencrypt-staging
+    
+    # HTTP-01 challenge solver
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+
+---
+# Certificate для API домена
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: credit-scoring-api-cert
+  namespace: ml-serving
+spec:
+  secretName: credit-scoring-api-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: api.credit-scoring.example.com  # ЗАМЕНИТЬ НА РЕАЛЬНЫЙ ДОМЕН
+  dnsNames:
+  - api.credit-scoring.example.com
+  - "*.api.credit-scoring.example.com"
+
+---
+# Certificate для Frontend домена
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: credit-scoring-frontend-cert
+  namespace: ml-serving
+spec:
+  secretName: credit-scoring-frontend-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: app.credit-scoring.example.com  # ЗАМЕНИТЬ НА РЕАЛЬНЫЙ ДОМЕН
+  dnsNames:
+  - app.credit-scoring.example.com
+  - "*.app.credit-scoring.example.com"

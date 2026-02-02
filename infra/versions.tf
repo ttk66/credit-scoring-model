@@ -16,17 +16,18 @@ terraform {
     }
   }
 
-  # Настройка remote state в Yandex Object Storage
-  backend "s3" {
-    endpoint   = "storage.yandexcloud.net"
-    bucket     = "credit-scoring-terraform-state"
-    region     = "ru-central1"
-    key        = "terraform.tfstate"
-    access_key = ""  # Заполняется через переменные
-    secret_key = ""  # Заполняется через переменные
-
-    skip_region_validation      = true
-    skip_credentials_validation = true
-    skip_metadata_api_check     = true
-  }
+  # Локальный backend для разработки
+  # Для production используйте remote backend (S3 в Yandex Object Storage)
+  # backend "s3" {
+  #   endpoint   = "https://storage.yandexcloud.net"
+  #   bucket     = "credit-scoring-terraform-state"
+  #   region     = "ru-central1"
+  #   key        = "terraform.tfstate"
+  #   access_key = ""  # Передать через: terraform init -backend-config="access_key=..."
+  #   secret_key = ""  # Передать через: terraform init -backend-config="secret_key=..."
+  #
+  #   skip_region_validation      = true
+  #   skip_credentials_validation = true
+  #   skip_metadata_api_check     = true
+  # }
 }

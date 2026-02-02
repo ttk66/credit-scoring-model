@@ -1,4 +1,4 @@
-FROM python:3.11-slim AS builder
+FROM mirror.gcr.io/library/python:3.11 AS builder
 
 WORKDIR /app
 
@@ -10,14 +10,12 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 
-COPY requirements.txt .
-RUN pip install --user --no-cache-dir -r requirements.txt
+COPY docker_for_nn_model/api/requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 
-COPY dvc_config.yaml /root/.config/dvc/config
 
-
-FROM python:3.11-slim AS runtime
+FROM mirror.gcr.io/library/python:3.11-slim AS runtime
 
 WORKDIR /app
 
@@ -28,8 +26,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 
-COPY --from=builder /root/.local /root/.local
-ENV PATH=/root/.local/bin:$PATH
+COPY --from=builder /usr/local /usr/local
 
 
 RUN useradd -m -u 1000 -s /bin/bash appuser && \
@@ -37,7 +34,7 @@ RUN useradd -m -u 1000 -s /bin/bash appuser && \
 USER appuser
 
 
-COPY --chown=appuser:appuser . .
+COPY --chown=appuser:appuser src /app/src
 
 
 RUN mkdir -p /app/data /app/models /app/logs
@@ -56,4 +53,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 
-ENTRYPOINT ["python", "-m", "uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+ENTRYPOINT ["python", "-m", "uvicorn", "src.api.app:app", "--host", "0.0.0.0", "--port", "8000"]

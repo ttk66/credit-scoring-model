@@ -5,9 +5,9 @@ resource "yandex_vpc_network" "main" {
 }
 
 resource "yandex_vpc_subnet" "subnets" {
-  count          = 3
+  count          = length(var.zones)
   name           = "${var.name_prefix}-subnet-${count.index + 1}"
-  zone           = element(["ru-central1-a", "ru-central1-b", "ru-central1-c"], count.index)
+  zone           = var.zones[count.index]
   network_id     = yandex_vpc_network.main.id
   v4_cidr_blocks = [cidrsubnet(var.vpc_cidr, 8, count.index * 32)]
   

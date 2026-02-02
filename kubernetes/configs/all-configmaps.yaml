@@ -1,0 +1,206 @@
+---
+# Frontend ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: ml-serving
+  labels:
+    app: credit-scoring-frontend
+data:
+  api-url: "http://credit-scoring-api.ml-serving.svc.cluster.local:80"
+  log-level: "INFO"
+  cache-max-age: "3600"
+  
+---
+# Frontend Nginx ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-nginx-config
+  namespace: ml-serving
+  labels:
+    app: credit-scoring-frontend
+data:
+  nginx.conf: |
+    user nginx;
+    worker_processes auto;
+    error_log /var/log/nginx/error.log warn;
+    pid /var/run/nginx.pid;
+
+    events {
+        worker_connections 1024;
+    }
+
+    http {
+        include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+
+        log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                        '$status $body_bytes_sent "$http_referer" '
+                        '"$http_user_agent" "$http_x_forwarded_for"';
+
+        access_log /var/log/nginx/access.log main;
+
+        sendfile on;
+        tcp_nopush on;
+        tcp_nodelay on;
+        keepalive_timeout 65;
+        types_hash_max_size 2048;
+        client_max_body_size 10m;
+
+        # Gzip compression
+        gzip on;
+        gzip_vary on;
+        gzip_proxied any;
+        gzip_comp_level 6;
+        gzip_types text/plain text/css text/xml text/javascript 
+                   application/json application/javascript application/xml+rss;
+
+        # Security headers
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "DENY" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+        # Cache control
+        map $sent_http_content_type $expires {
+            default                    off;
+            text/html                  epoch;
+            text/css                   max;
+            application/javascript     max;
+            ~image/                    max;
+        }
+        expires $expires;
+
+        server {
+            listen 8080;
+            server_name _;
+
+            location / {
+                root /usr/share/nginx/html;
+                index index.html index.htm;
+                try_files $uri $uri/ /index.html;
+            }
+
+            location /health {
+                access_log off;
+                return 200 "healthy\n";
+                add_header Content-Type text/plain;
+            }
+
+            # API proxy (optional)
+            location /api/ {
+                proxy_pass http://credit-scoring-api.ml-serving.svc.cluster.local:80/;
+                proxy_http_version 1.1;
+                proxy_set_header Connection "";
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_read_timeout 60s;
+                proxy_connect_timeout 60s;
+            }
+        }
+    }
+
+---
+# Database ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: database-config
+  namespace: ml-serving
+  labels:
+    app: postgresql
+spec:
+  database-name: "credit_scoring"
+  postgresql.conf: |
+    # PostgreSQL configuration
+    max_connections = 200
+    shared_buffers = 256MB
+    effective_cache_size = 1GB
+    maintenance_work_mem = 64MB
+    checkpoint_completion_target = 0.9
+    wal_buffers = 16MB
+    default_statistics_target = 100
+    random_page_cost = 1.1
+    effective_io_concurrency = 200
+    work_mem = 1311kB
+    min_wal_size = 1GB
+    max_wal_size = 4GB
+    max_worker_processes = 4
+    max_parallel_workers_per_gather = 2
+    max_parallel_workers = 4
+    max_parallel_maintenance_workers = 2
+
+---
+# Redis Credentials Secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: redis-credentials
+  namespace: ml-serving
+  labels:
+    app: redis
+type: Opaque
+stringData:
+  password: "redis-secure-password-change-me"
+  connection-string: "redis://:redis-secure-password-change-me@redis.ml-serving.svc.cluster.local:6379/0"
+
+---
+# Database Credentials Secret (expanded)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: database-credentials
+  namespace: ml-serving
+  labels:
+    app: postgresql
+type: Opaque
+stringData:
+  username: "postgres"
+  password: "postgres-secure-password-change-me"
+  connection-string: "postgresql://postgres:postgres-secure-password-change-me@postgresql.ml-serving.svc.cluster.local:5432/credit_scoring?sslmode=require"
+  host: "postgresql.ml-serving.svc.cluster.local"
+  port: "5432"
+  database: "credit_scoring"
+
+---
+# Docker Registry Credentials Secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: docker-registry-credentials
+  namespace: ml-serving
+  labels:
+    app: credit-scoring
+type: kubernetes.io/dockercfg
+stringData:
+  .dockercfg: |
+    {
+      "cr.yandex": {
+        "auth": "b2F1dGg6MTExMQ==",
+        "email": "your-email@example.com"
+      }
+    }
+
+---
+# Storage Credentials Secret (expanded)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: storage-credentials
+  namespace: ml-serving
+  labels:
+    app: credit-scoring
+type: Opaque
+stringData:
+  s3-access-key: "your-access-key"
+  s3-secret-key: "your-secret-key"
+  s3-endpoint: "https://storage.yandexcloud.net"
+  s3-bucket: "credit-scoring-models"
+  s3-region: "ru-central1"
+  dvc-access-key: "your-access-key"
+  dvc-secret-key: "your-secret-key"
+  dvc-remote: "s3://credit-scoring-data/dvc-storage"

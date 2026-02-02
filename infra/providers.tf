@@ -4,16 +4,18 @@ provider "yandex" {
   token     = var.yc_token
 }
 
+data "yandex_client_config" "this" {}
+
 provider "kubernetes" {
   host                   = module.kubernetes.cluster_external_v4_endpoint
   cluster_ca_certificate = module.kubernetes.cluster_ca_certificate
-  token                  = var.service_account_token
+  token                  = data.yandex_client_config.this.iam_token
 }
 
 provider "helm" {
   kubernetes {
     host                   = module.kubernetes.cluster_external_v4_endpoint
     cluster_ca_certificate = module.kubernetes.cluster_ca_certificate
-    token                  = var.service_account_token
+    token                  = data.yandex_client_config.this.iam_token
   }
 }

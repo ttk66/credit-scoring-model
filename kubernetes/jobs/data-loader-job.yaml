@@ -1,0 +1,171 @@
+---
+# Data Loader Job (One-time execution)
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: credit-scoring-data-loader
+  namespace: ml-serving
+  labels:
+    app: credit-scoring-data-loader
+    component: data-loader
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 3600  # 1 hour timeout
+  template:
+    metadata:
+      labels:
+        app: credit-scoring-data-loader
+        component: data-loader
+    spec:
+      serviceAccountName: ml-serving-sa
+      restartPolicy: OnFailure
+      initContainers:
+      - name: wait-for-database
+        image: busybox:1.35
+        command:
+        - sh
+        - -c
+        - |
+          until nc -z postgresql.ml-serving.svc.cluster.local 5432; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+      containers:
+      - name: data-loader
+        image: cr.yandex/crpn3tq7q9d6m8i8e5vn/credit-scoring-data-loader:1.0.0
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: DVC_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: storage-credentials
+              key: dvc-access-key
+        - name: DVC_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: storage-credentials
+              key: dvc-secret-key
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: database-credentials
+              key: connection-string
+        - name: DVC_REMOTE
+          valueFrom:
+            configMapKeyRef:
+              name: api-config
+              key: feature-store-url
+        volumeMounts:
+        - name: data-volume
+          mountPath: /app/data
+        - name: cache-volume
+          mountPath: /app/.dvc/cache
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: data-pvc
+      - name: cache-volume
+        emptyDir: {}
+
+---
+# Data Loader CronJob (Periodic execution)
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: credit-scoring-data-loader-cron
+  namespace: ml-serving
+  labels:
+    app: credit-scoring-data-loader
+    component: data-loader-cron
+spec:
+  schedule: "0 2 * * *"  # Every day at 2 AM
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      activeDeadlineSeconds: 3600
+      template:
+        metadata:
+          labels:
+            app: credit-scoring-data-loader
+            component: data-loader-cron
+        spec:
+          serviceAccountName: ml-serving-sa
+          restartPolicy: OnFailure
+          initContainers:
+          - name: wait-for-database
+            image: busybox:1.35
+            command:
+            - sh
+            - -c
+            - |
+              until nc -z postgresql.ml-serving.svc.cluster.local 5432; do
+                echo "Waiting for PostgreSQL..."
+                sleep 2
+              done
+          containers:
+          - name: data-loader
+            image: cr.yandex/crpn3tq7q9d6m8i8e5vn/credit-scoring-data-loader:1.0.0
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: DVC_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: storage-credentials
+                  key: dvc-access-key
+            - name: DVC_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: storage-credentials
+                  key: dvc-secret-key
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: database-credentials
+                  key: connection-string
+            - name: DVC_REMOTE
+              valueFrom:
+                configMapKeyRef:
+                  name: api-config
+                  key: feature-store-url
+            volumeMounts:
+            - name: data-volume
+              mountPath: /app/data
+            - name: cache-volume
+              mountPath: /app/.dvc/cache
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "500m"
+              limits:
+                memory: "2Gi"
+                cpu: "2000m"
+            securityContext:
+              runAsUser: 1000
+              runAsGroup: 1000
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
+          volumes:
+          - name: data-volume
+            persistentVolumeClaim:
+              claimName: data-pvc
+          - name: cache-volume
+            emptyDir: {}

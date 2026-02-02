@@ -37,12 +37,6 @@ variable "environment" {
   }
 }
 
-variable "service_account_token" {
-  description = "Service account token for Kubernetes"
-  type        = string
-  sensitive   = true
-}
-
 # Remote state variables
 variable "yc_access_key" {
   description = "Yandex Cloud access key for Object Storage"

@@ -2,7 +2,7 @@ name: CI/CD Pipeline - Credit Scoring ML
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, nn_model ]
     paths:
       - 'src/**'
       - 'models/**'
@@ -10,8 +10,8 @@ on:
       - 'Dockerfile*'
       - '.github/workflows/**'
   pull_request:
-    branches: [ main, develop ]
-  workflow_dispatch:  # Ручной запуск
+    branches: [ main, develop, nn_model ]
+  workflow_dispatch:
     inputs:
       environment:
         description: 'Deployment environment'
@@ -344,7 +344,7 @@ jobs:
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: deployments
-          SLACK_TITLE: "🚀 Deployment Successful"
+          SLACK_TITLE: "Deployment Successful"
           SLACK_MESSAGE: "Credit Scoring ML deployed to ${{ needs.setup.outputs.environment }}"
           SLACK_COLOR: "good"
 

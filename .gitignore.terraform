@@ -1,0 +1,39 @@
+# Terraform files
+terraform.tfvars
+terraform.tfvars.json
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Credentials and secrets
+key.json
+*.key
+*.pem
+terraform-key.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.env
+.env.local
+
+# Logs
+*.log
+crash.log
+crash.*.log
+
+# Outputs
+outputs.json
+tfplan
+tfplan.json

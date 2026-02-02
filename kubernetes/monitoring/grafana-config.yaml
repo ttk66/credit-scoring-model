@@ -1,0 +1,157 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: ml-serving
+data:
+  prometheus.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        url: http://prometheus:9090
+        isDefault: true
+        access: proxy
+        editable: true
+
+  loki.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Loki
+        type: loki
+        url: http://loki:3100
+        access: proxy
+        editable: true
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: ml-serving
+data:
+  dashboard-provider.yaml: |
+    apiVersion: 1
+    providers:
+      - name: 'default'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        updateIntervalSeconds: 10
+        allowUiUpdates: true
+        options:
+          path: /var/lib/grafana/dashboards
+
+  # Model Performance Dashboard
+  model-performance.json: |
+    {
+      "dashboard": {
+        "title": "Credit Scoring Model Performance",
+        "panels": [
+          {
+            "title": "Model Accuracy",
+            "targets": [
+              {"expr": "model_auc"}
+            ],
+            "type": "stat"
+          },
+          {
+            "title": "Inference Latency P95",
+            "targets": [
+              {"expr": "histogram_quantile(0.95, rate(model_inference_duration_seconds_bucket[5m]))"}
+            ],
+            "type": "graph"
+          },
+          {
+            "title": "Predictions per Minute",
+            "targets": [
+              {"expr": "rate(model_predictions_total[1m])"}
+            ],
+            "type": "graph"
+          },
+          {
+            "title": "Error Rate",
+            "targets": [
+              {"expr": "rate(model_prediction_errors_total[5m])"}
+            ],
+            "type": "graph"
+          }
+        ]
+      }
+    }
+
+  # Infrastructure Dashboard
+  infrastructure.json: |
+    {
+      "dashboard": {
+        "title": "Infrastructure Health",
+        "panels": [
+          {
+            "title": "API Pod CPU Usage",
+            "targets": [
+              {"expr": "rate(container_cpu_usage_seconds_total{pod=~'api-.*'}[5m])"}
+            ],
+            "type": "graph"
+          },
+          {
+            "title": "API Pod Memory Usage",
+            "targets": [
+              {"expr": "container_memory_usage_bytes{pod=~'api-.*'} / 1024 / 1024"}
+            ],
+            "type": "graph"
+          },
+          {
+            "title": "Pod Restart Count",
+            "targets": [
+              {"expr": "kube_pod_container_status_restarts_total{pod=~'api-.*'}"}
+            ],
+            "type": "stat"
+          },
+          {
+            "title": "Network I/O",
+            "targets": [
+              {"expr": "rate(container_network_receive_bytes_total[5m])"}
+            ],
+            "type": "graph"
+          }
+        ]
+      }
+    }
+
+  # Data Drift Dashboard
+  data-drift.json: |
+    {
+      "dashboard": {
+        "title": "Data Drift Monitoring",
+        "panels": [
+          {
+            "title": "Drift Status",
+            "targets": [
+              {"expr": "data_drift_detected"}
+            ],
+            "type": "stat"
+          },
+          {
+            "title": "Feature Drift Scores",
+            "targets": [
+              {"expr": "evidently_feature_drift_score"}
+            ],
+            "type": "graph"
+          },
+          {
+            "title": "Target Drift",
+            "targets": [
+              {"expr": "evidently_target_drift_score"}
+            ],
+            "type": "graph"
+          },
+          {
+            "title": "Prediction Drift",
+            "targets": [
+              {"expr": "evidently_prediction_drift_score"}
+            ],
+            "type": "graph"
+          }
+        ]
+      }
+    }

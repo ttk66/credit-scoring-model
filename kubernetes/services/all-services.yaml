@@ -1,0 +1,102 @@
+---
+# Frontend Service (ClusterIP)
+apiVersion: v1
+kind: Service
+metadata:
+  name: credit-scoring-frontend
+  namespace: ml-serving
+  labels:
+    app: credit-scoring-frontend
+    component: frontend
+spec:
+  selector:
+    app: credit-scoring-frontend
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+    protocol: TCP
+  type: ClusterIP
+
+---
+# Frontend Service (External)
+apiVersion: v1
+kind: Service
+metadata:
+  name: credit-scoring-frontend-external
+  namespace: ml-serving
+  labels:
+    app: credit-scoring-frontend
+    component: frontend-external
+spec:
+  selector:
+    app: credit-scoring-frontend
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+    protocol: TCP
+  type: LoadBalancer
+  externalTrafficPolicy: Local
+
+---
+# PostgreSQL Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgresql
+  namespace: ml-serving
+  labels:
+    app: postgresql
+    component: database
+spec:
+  selector:
+    app: postgresql
+  clusterIP: None  # Headless service для StatefulSet
+  ports:
+  - name: postgresql
+    port: 5432
+    targetPort: 5432
+    protocol: TCP
+  type: ClusterIP
+
+---
+# Redis Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: ml-serving
+  labels:
+    app: redis
+    component: cache
+spec:
+  selector:
+    app: redis
+  clusterIP: None  # Headless service для StatefulSet
+  ports:
+  - name: redis
+    port: 6379
+    targetPort: 6379
+    protocol: TCP
+  type: ClusterIP
+
+---
+# Celery Worker Service (для Flower мониторинга)
+apiVersion: v1
+kind: Service
+metadata:
+  name: credit-scoring-celery
+  namespace: ml-serving
+  labels:
+    app: credit-scoring-celery
+    component: worker
+spec:
+  selector:
+    app: credit-scoring-celery
+  ports:
+  - name: metrics
+    port: 8001
+    targetPort: 8001
+    protocol: TCP
+  type: ClusterIP
