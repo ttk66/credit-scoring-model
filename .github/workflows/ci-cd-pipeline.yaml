@@ -83,7 +83,13 @@ jobs:
     needs: setup
     strategy:
       matrix:
-        image: [api, training, frontend]
+        include:
+          - image: api
+            dockerfile: ./docker_for_nn_model/api/Dockerfile
+          - image: frontend
+            dockerfile: ./docker_for_nn_model/frontend/Dockerfile
+          - image: model-downloader
+            dockerfile: ./docker_for_nn_model/model-downloader/Dockerfile
     outputs:
       image_tag: ${{ steps.meta.outputs.tags }}
     steps:
@@ -117,7 +123,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./docker/${{ matrix.image }}/Dockerfile
+          file: ${{ matrix.dockerfile }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
