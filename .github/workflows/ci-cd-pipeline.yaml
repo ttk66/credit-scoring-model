@@ -87,9 +87,6 @@ jobs:
           - image: api
             dockerfile: ./docker_for_nn_model/api/Dockerfile
             context: .
-          - image: frontend
-            dockerfile: ./docker_for_nn_model/frontend/Dockerfile
-            context: .
           - image: model-downloader
             dockerfile: ./docker_for_nn_model/model-downloader/Dockerfile
             context: ./docker_for_nn_model/model-downloader
