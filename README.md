@@ -20,7 +20,18 @@
 - `infra/` - Terraform для облачной инфраструктуры;
 - `kubernetes/` - Kubernetes манифесты;
 - `airflow/dags/` - DAG для переобучения;
+- `scripts/` - служебные скрипты для деплоя, мониторинга, обучения и утилит;
 - `.github/workflows/` - CI/CD пайплайны.
+
+### Описание папки scripts
+
+В `scripts/` находятся основные вспомогательные сценарии:
+
+- `deploy.sh`, `deploy-k8s.sh`, `full-deployment.sh` - запуск деплоя;
+- `deploy-monitoring.sh`, `setup-monitoring-complete.sh` - настройка мониторинга;
+- `build_and_push.sh` - сборка и публикация Docker образов;
+- `train_and_convert.py`, `compare_performance.py`, `optimize_model.py` - задачи по моделям;
+- `fill-placeholders.sh`, `fill-k8s-placeholders.sh` - генерация локальных конфигов.
 
 ## 3. Требования
 
@@ -164,5 +175,4 @@ Airflow DAG:
 - `YC_OAUTH_TOKEN`;
 - `KUBE_CONFIG_STAGING`;
 - `KUBE_CONFIG_PRODUCTION`.
-
 

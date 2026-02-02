@@ -5,6 +5,8 @@
 terraform.tfvars
 .secrets/
 infra/terraform.tfvars
+dvc.lock
+dvc.yaml
 
 # Terraform
 *.tfvars
